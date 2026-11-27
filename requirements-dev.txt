@@ -1,0 +1,7 @@
+homeassistant==2026.11.3
+# Runtime dependency of Home Assistant's network integration.
+ifaddr==0.2.0
+pytest>=9,<10
+pytest-asyncio>=1.2,<2
+pytest-cov>=7,<8
+ruff>=0.15,<1
