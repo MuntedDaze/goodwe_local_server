@@ -6,11 +6,13 @@ from contextlib import asynccontextmanager
 from dataclasses import replace
 from pathlib import Path
 
+import probatio
 import pytest
 from homeassistant import bootstrap, loader
 from homeassistant.config_entries import ConfigEntries, ConfigEntryState
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -20,7 +22,7 @@ from custom_components.goodwe_local_server import GoodWeServer, entry_settings
 from custom_components.goodwe_local_server.const import DOMAIN, Settings
 from custom_components.goodwe_local_server.diagnostics import async_get_config_entry_diagnostics
 
-from .helpers import device_packet, meter_payload, tcp_client, until
+from .helpers import device_packet, meter_payload, stamp, tcp_client, until
 
 REPO = Path(__file__).resolve().parents[1]
 METER_SERIAL = "TEST0001"
@@ -285,3 +287,103 @@ async def test_busy_port_recovery_releases_earlier_listener(tmp_path):
         assert await hass.config_entries.async_reload(entry.entry_id)
         assert entry.state is ConfigEntryState.LOADED
         assert _port(entry.runtime_data) == port
+
+
+async def test_options_form_serializes_and_ip_override_can_be_cleared(tmp_path):
+    async with home_assistant(tmp_path) as hass:
+        entry = await _setup_entry(hass)
+        manager = hass.config_entries.options
+        flow = await manager.async_init(entry.entry_id)
+        await manager.async_configure(flow["flow_id"], {"upstream_address": "8.8.4.4"})
+        await hass.async_block_till_done()
+        assert entry_settings(entry).upstream_address == "8.8.4.4"
+
+        flow = await manager.async_init(entry.entry_id)
+        # The frontend receives this serialized form and omits a cleared optional field.
+        fields = probatio.to_field_list(flow["data_schema"], custom_serializer=cv.custom_serializer)
+        saved = await manager.async_configure(flow["flow_id"], {"stale_after": 200})
+        assert saved["type"] is FlowResultType.CREATE_ENTRY
+        await hass.async_block_till_done()
+        assert entry_settings(entry).upstream_address == ""
+        assert entry_settings(entry).stale_after == 200
+        override = next(field for field in fields if field["name"] == "upstream_address")
+        assert override["description"] == {"suggested_value": "8.8.4.4"}
+        assert "default" not in override
+
+
+async def test_reversed_inverter_ct_is_unavailable_in_home_assistant(tmp_path):
+    async with home_assistant(tmp_path) as hass:
+        entry = await _setup_entry(hass)
+        async with tcp_client(_port(entry.runtime_data)) as (_reader, writer):
+            writer.write(device_packet(payload=meter_payload(-3630, -3898)))
+            await until(lambda: _state(hass, _id(hass, "grid_import_power")) == "3630")
+            assert _state(hass, _id(hass, "solar_generation_power")) == "unavailable"
+            assert _state(hass, _id(hass, "household_consumption_power")) == "unavailable"
+            assert _state(hass, _id(hass, "l2_export_power")) == "-3898"
+
+
+async def test_diagnostics_and_clean_shutdown_when_the_port_is_busy(tmp_path, caplog):
+    def reject(_reader, writer):
+        writer.close()
+
+    async with home_assistant(tmp_path) as hass:
+        entry = await _setup_entry(hass)
+        async with await asyncio.start_server(reject, "0.0.0.0", 0) as occupied:
+            port = occupied.sockets[0].getsockname()[1]
+            hass.config_entries.async_update_entry(entry, options={"listen_port": port})
+            assert not await hass.config_entries.async_reload(entry.entry_id)
+            diagnostics = await async_get_config_entry_diagnostics(hass, entry)
+            assert diagnostics["listener_running"] is False
+        assert await hass.config_entries.async_reload(entry.entry_id)
+    assert "Unable to remove unknown job listener" not in caplog.text
+
+
+async def test_removing_the_integration_releases_the_port(tmp_path):
+    async with home_assistant(tmp_path) as hass:
+        entry = await _setup_entry(hass)
+        runtime = entry.runtime_data
+        port = _port(runtime)
+        async with tcp_client(port) as (reader, writer):
+            writer.write(device_packet())
+            await until(lambda: _state(hass, _id(hass, "grid_import_power")) == "150")
+            await hass.config_entries.async_remove(entry.entry_id)
+            await hass.async_block_till_done()
+            assert await asyncio.wait_for(reader.read(), 1) == b""
+        assert runtime.server is None
+        assert _id(hass, "grid_import_power") is None
+        with pytest.raises(OSError):
+            await asyncio.open_connection("127.0.0.1", port)
+        await _setup_entry(hass)
+
+
+async def test_failed_platform_setup_releases_the_listener(tmp_path, monkeypatch):
+    async with home_assistant(tmp_path) as hass:
+        entry = await _setup_entry(hass)
+        assert await hass.config_entries.async_unload(entry.entry_id)
+
+        async def fail(*_args):
+            raise RuntimeError("platform failure")
+
+        with monkeypatch.context() as patch:
+            patch.setattr(hass.config_entries, "async_forward_entry_setups", fail)
+            assert not await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_failed_unload_keeps_receiving(tmp_path, monkeypatch):
+    async with home_assistant(tmp_path) as hass:
+        entry = await _setup_entry(hass)
+        runtime = entry.runtime_data
+        async with tcp_client(_port(runtime)) as (_reader, writer):
+            writer.write(device_packet())
+            await until(lambda: _state(hass, _id(hass, "grid_import_power")) == "150")
+
+            async def refuse(*_args):
+                return False
+
+            with monkeypatch.context() as patch:
+                patch.setattr(hass.config_entries, "async_unload_platforms", refuse)
+                assert not await hass.config_entries.async_unload(entry.entry_id)
+            assert runtime.server is not None and runtime.on_device is not None
+            writer.write(device_packet(payload=meter_payload(-275), sent=stamp(second=1)))
+            await until(lambda: _state(hass, _id(hass, "grid_import_power")) == "275")

@@ -23,6 +23,8 @@ from .protocol import METER_MODELS, RELAY_ONLY_MODEL, signed
 from .server import DeviceState
 
 SCAN_INTERVAL = timedelta(seconds=10)
+# CT2 draw up to this size is inverter standby or noise. Beyond it, generation is unknown.
+SOLAR_STANDBY_LIMIT_W = 100
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -180,13 +182,18 @@ def _grid(payload: bytes) -> int:
     return -signed(payload, 0x4B, 4)
 
 
-def _solar(payload: bytes, settings: Settings) -> int:
+def _solar(payload: bytes, settings: Settings) -> int | None:
     solar = signed(payload, 0x4F, 4)
+    if solar < -SOLAR_STANDBY_LIMIT_W:
+        # A reversed or misplaced clamp must not look like a sunless day.
+        return None
     return solar if solar > settings.solar_offset_w else 0
 
 
 def _household(payload: bytes, settings: Settings) -> int | None:
-    watts = _grid(payload) + _solar(payload, settings)
+    if (solar := _solar(payload, settings)) is None:
+        return None
+    watts = _grid(payload) + solar
     return watts if watts >= 0 else None
 
 

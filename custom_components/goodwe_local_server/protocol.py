@@ -13,12 +13,17 @@ CLOUD_KEEPALIVE = b"\x01\x02"
 MAX_FRAME = 4096
 METER_MODELS = {"91000HKU": "HK1000", "93000HKU": "HK3000"}
 INVERTER_MODEL = "58000DTA"
-# The DNS G3 has its own layout. Its known frame types can pass through to SEMS.
+# The DNS G3 has its own layout. It is forwarded to SEMS and never decoded locally.
 RELAY_ONLY_MODEL = "53000DSC"
 DEVICE_FAMILY = dict.fromkeys(METER_MODELS, 3) | {
     INVERTER_MODEL: 1,
     RELAY_ONLY_MODEL: 1,
 }
+# Message types that SEMS answers, and the device's one-way clock acknowledgement.
+REQUEST_KINDS = (0x03, 0x04, 0x45)
+CLOCK_ACK_KIND = 0x10
+# The published SEMS clock message. Its family byte is 1 even for meters.
+TIME_SET = (0x01, 0x16)
 _KEY = b"\xff" * 16
 _IDENTITY = re.compile(rb"[0-9A-Za-z]{16}")
 ACK = bytes(16)
@@ -76,34 +81,46 @@ def _decrypt(iv: bytes, ciphertext: bytes) -> bytes:
 
 @dataclass(frozen=True, slots=True)
 class DeviceFrame:
-    """A validated device frame with identity and optional current telemetry."""
+    """A checksummed device frame, plus whatever could be decoded locally."""
 
     raw: bytes
+    family: int
     kind: int
-    model: str
-    serial: str
-    telemetry: bytes | None
+    # The 16 bytes of model and serial that SEMS echoes in its replies.
+    identity: bytes
+    model: str = ""
+    serial: str = ""
+    telemetry: bytes | None = None
+    # Envelope timestamp (Y M D H m s). Big-endian bytes sort chronologically.
+    sent_at: bytes = b""
 
-    @property
-    def family(self) -> int:
-        return DEVICE_FAMILY[self.model]
+
+def _identity_offset(kind: int) -> int:
+    return 12 if kind == CLOCK_ACK_KIND else 14
 
 
-def decode_device(frame: bytes) -> DeviceFrame | None:
-    """Validate a complete framed device message and decode supported telemetry."""
+def parse_device(frame: bytes) -> DeviceFrame:
+    """Check a framed device message is intact, without interpreting its content."""
     _validate_crc(frame, "big")
     family, kind = frame[10:12]
-    if kind not in (0x03, 0x04, 0x10, 0x45) or family not in (1, 3):
+    offset = _identity_offset(kind)
+    identity = frame[offset : offset + 16] if len(frame) >= offset + 18 else b""
+    return DeviceFrame(frame, family, kind, identity)
+
+
+def decode_telemetry(message: DeviceFrame) -> DeviceFrame | None:
+    """Decode a recognized message, returning None for unsupported types and models."""
+    frame, family, kind = message.raw, message.family, message.kind
+    if kind not in (*REQUEST_KINDS, CLOCK_ACK_KIND) or family not in (1, 3):
         return None
-    short_envelope = kind == 0x10
-    identity_offset = 12 if short_envelope else 14
-    identity = frame[identity_offset : identity_offset + 16]
+    short_envelope = kind == CLOCK_ACK_KIND
+    identity = message.identity
     if not _IDENTITY.fullmatch(identity):
         raise ProtocolError("invalid model or serial")
     model, serial = identity[:8].decode("ascii"), identity[8:].decode("ascii")
     if DEVICE_FAMILY.get(model) != family:
         return None
-    iv_offset = identity_offset + 16
+    iv_offset = _identity_offset(kind) + 16
     payload_offset = iv_offset + (16 if short_envelope else 22)
     payload = _decrypt(frame[iv_offset : iv_offset + 16], frame[payload_offset:-2])
     if short_envelope and len(payload) != 16:
@@ -119,7 +136,25 @@ def decode_device(frame: bytes) -> DeviceFrame | None:
         voltage_offsets = (0x39,) if model == "91000HKU" else (0x39, 0x3B, 0x3D)
         if not any(signed(payload, offset, 2) > 0 for offset in voltage_offsets):
             raise ProtocolError("missing HomeKit line voltage")
-    return DeviceFrame(frame, kind, model, serial, telemetry)
+    sent_at = b"" if short_envelope else frame[payload_offset - 6 : payload_offset]
+    return DeviceFrame(frame, family, kind, identity, model, serial, telemetry, sent_at)
+
+
+def decode_device(frame: bytes) -> DeviceFrame | None:
+    """Validate a complete framed device message and decode supported telemetry."""
+    return decode_telemetry(parse_device(frame))
+
+
+def _is_time_set(family: int, kind: int, payload: bytes, request: DeviceFrame) -> bool:
+    """Match the documented clock payload: a valid date followed by six zero bytes."""
+    types = (TIME_SET, (0x01, 0x03)) if request.family == 1 else (TIME_SET,)
+    if (family, kind) not in types or payload[10:] != bytes(6):
+        return False
+    try:
+        datetime(2000 + payload[4], *payload[5:10])
+    except ValueError:
+        return False
+    return True
 
 
 def classify_reply(frame: bytes, request: DeviceFrame) -> str | None:
@@ -127,18 +162,12 @@ def classify_reply(frame: bytes, request: DeviceFrame) -> str | None:
     if frame == CLOUD_KEEPALIVE:
         return None
     _validate_crc(frame, "little")
-    if len(frame) != 58 or frame[8:24] != (request.model + request.serial).encode("ascii"):
+    if len(frame) != 58 or frame[8:24] != request.identity:
         return None
     family, kind = frame[6:8]
     payload = _decrypt(frame[24:40], frame[40:-2])
-    if request.kind == 0x03:
-        time_sync_type = (1, 0x16) if request.family == 3 else (1, 0x03)
-        if (family, kind) == time_sync_type and payload[10:] == bytes(6):
-            try:
-                datetime(2000 + payload[4], *payload[5:10])
-            except ValueError:
-                return None
-            return "time_sync"
+    if request.kind == 0x03 and _is_time_set(family, kind, payload, request):
+        return "time_sync"
     if (family, kind) == (request.family, request.kind):
         if payload == ACK:
             return "ack"

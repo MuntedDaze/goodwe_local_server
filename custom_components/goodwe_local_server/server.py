@@ -2,21 +2,34 @@
 
 import asyncio
 import logging
-from collections import Counter
+from collections import Counter, deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from hashlib import sha256
 
 from .const import Settings
-from .protocol import DEVICE_PREFIX, DeviceFrame, ProtocolError, decode_device, read_frame
+from .protocol import (
+    DEVICE_PREFIX,
+    DeviceFrame,
+    ProtocolError,
+    decode_telemetry,
+    parse_device,
+    read_frame,
+)
 from .relay import RelayEndpoint, RelayFailure, RelaySession, close_writer
 
 _LOGGER = logging.getLogger(__name__)
 MAX_CONNECTIONS = 32
+MAX_CONNECTIONS_PER_PEER = 16
 MAX_DEVICES = 64
 FRAME_TIMEOUT = 120
-RELAY_QUEUE_SIZE = 8
-RELAY_DRAIN_TIMEOUT = 10
+# Devices send buffered reports back to back after an interruption.
+RELAY_QUEUE_SIZE = 128
+RELAY_DRAIN_TIMEOUT = 60
+REPLAY_HISTORY = 64
+# Minimum spacing which shows a device clock moved back, as opposed to old frames.
+CLOCK_RESYNC_GAP = 5
 
 
 @dataclass(slots=True)
@@ -37,6 +50,27 @@ class DeviceState:
     telemetry_listeners: set[Callable[[], None]] = field(default_factory=set)
     diagnostic_listeners: set[Callable[[], None]] = field(default_factory=set)
     expiry: asyncio.TimerHandle | None = None
+    recent: deque[bytes] = field(default_factory=lambda: deque(maxlen=REPLAY_HISTORY))
+    sent_at: bytes = b""
+    clock_candidate: tuple[bytes, float] | None = None
+
+    def screen(self, packet: DeviceFrame) -> str | None:
+        """Return why a reading must not replace or refresh current telemetry."""
+        digest = sha256(packet.raw).digest()
+        if digest in self.recent:
+            return "duplicate_telemetry"
+        self.recent.append(digest)
+        if packet.sent_at < self.sent_at:
+            now = asyncio.get_running_loop().time()
+            earlier = self.clock_candidate
+            # Two advancing, spaced reports mean the device clock was moved back.
+            if not (
+                earlier and earlier[0] < packet.sent_at and now - earlier[1] >= CLOCK_RESYNC_GAP
+            ):
+                self.clock_candidate = (packet.sent_at, now)
+                return "out_of_order_telemetry"
+        self.sent_at, self.clock_candidate = packet.sent_at, None
+        return None
 
     @property
     def data_age(self) -> int | None:
@@ -127,7 +161,8 @@ class GoodWeServer:
         self.counters: Counter[str] = Counter()
         self.on_device: Callable[[DeviceState], None] | None = None
         self.server: asyncio.Server | None = None
-        self._clients: dict[asyncio.Task, asyncio.StreamWriter] = {}
+        self._clients: dict[asyncio.Task, tuple[asyncio.StreamWriter, str]] = {}
+        self._failing: set[bytes] = set()
 
     async def start(self) -> None:
         """Start receiving connections on the IPv4 LAN."""
@@ -151,7 +186,7 @@ class GoodWeServer:
             server, self.server = self.server, None
             server.close()
             clients = tuple(self._clients.items())
-            for task, writer in clients:
+            for task, (writer, _) in clients:
                 writer.close()
                 task.cancel()
             await asyncio.gather(*(task for task, _ in clients), return_exceptions=True)
@@ -162,31 +197,41 @@ class GoodWeServer:
                 device.expiry = None
 
     def _accept(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
-        if self.server is None or len(self._clients) >= MAX_CONNECTIONS:
+        peer = (writer.get_extra_info("peername") or ("",))[0]
+        from_peer = sum(other == peer for _, other in self._clients.values())
+        if (
+            self.server is None
+            or len(self._clients) >= MAX_CONNECTIONS
+            or from_peer >= MAX_CONNECTIONS_PER_PEER
+        ):
             self.counters["connections_rejected"] += 1
             writer.close()
             return
         self.counters["connections"] += 1
         task = asyncio.create_task(self._handle(reader, writer, datetime.now(UTC)))
-        self._clients[task] = writer
+        self._clients[task] = (writer, peer)
         task.add_done_callback(self._client_done)
 
     def _client_done(self, task: asyncio.Task) -> None:
         self._clients.pop(task)
         if not task.cancelled() and (err := task.exception()) is not None:
-            self.counters["internal_errors"] += 1
-            _LOGGER.error("Unexpected GoodWe connection error (%s)", type(err).__name__)
+            self._internal_error(err)
+
+    def _internal_error(self, err: BaseException) -> None:
+        # The message and traceback could carry addresses or packet contents.
+        self.counters["internal_errors"] += 1
+        _LOGGER.error("Unexpected GoodWe connection error (%s)", type(err).__name__)
 
     def _device_for(self, packet: DeviceFrame, connected_at: datetime) -> DeviceState | None:
         if (device := self.devices.get(packet.serial)) is not None:
             if device.model != packet.model:
-                self.counters["conflicting_devices"] += 1
+                self._record("conflicting_devices", None)
                 return None
             device.last_connection = max(device.last_connection, connected_at)
             device.counters["connections"] += 1
             return device
         if len(self.devices) >= MAX_DEVICES:
-            self.counters["devices_rejected"] += 1
+            self._record("devices_rejected", None)
             return None
         device = DeviceState(
             packet.model,
@@ -196,14 +241,22 @@ class GoodWeServer:
         )
         device.counters["connections"] = 1
         self.devices[packet.serial] = device
+        _LOGGER.info("Receiving a GoodWe %s device", packet.model)
         if self.on_device:
             self.on_device(device)
         return device
 
-    def _record(self, name: str, device: DeviceState | None) -> None:
-        self.counters[name] += 1
+    def _known_device(self, identity: bytes) -> DeviceState | None:
+        device = self.devices.get(identity[8:].decode("ascii", "replace"))
+        if device and identity[:8] == device.model.encode("ascii"):
+            return device
+        return None
+
+    def _record(self, name: str, device: DeviceState | None, count: int = 1) -> None:
+        self.counters[name] += count
+        _LOGGER.debug("GoodWe event: %s", name)
         if device:
-            device.counters[name] += 1
+            device.counters[name] += count
             device.publish_diagnostics()
 
     async def _handle(
@@ -212,10 +265,12 @@ class GoodWeServer:
         writer: asyncio.StreamWriter,
         connected_at: datetime,
     ) -> None:
-        queue: asyncio.Queue[tuple[DeviceFrame, DeviceState]] = asyncio.Queue(RELAY_QUEUE_SIZE)
+        queue: asyncio.Queue[tuple[DeviceFrame, DeviceState | None]] = asyncio.Queue(
+            RELAY_QUEUE_SIZE
+        )
         relay_task: asyncio.Task | None = None
         device: DeviceState | None = None
-        eof = False
+        drain = first = True
         try:
             while True:
                 try:
@@ -225,47 +280,61 @@ class GoodWeServer:
                     self._record("framing_errors", device)
                     break
                 if frame is None:
-                    eof = True
                     break
-                if device is None and self.endpoint and frame in self.endpoint.in_flight:
+                # Buffered frames must not monopolize Home Assistant's event loop.
+                await asyncio.sleep(0)
+                # A forwarded frame which opens a new connection has looped back.
+                if first and self.endpoint and frame in self.endpoint.in_flight:
                     self._record("relay_loop", device)
                     break
+                first = False
                 try:
-                    packet = decode_device(frame)
+                    message = parse_device(frame)
                 except ProtocolError:
                     self._record("invalid_packets", device)
                     continue
-                if packet is None:
-                    self._record("unsupported_packets", device)
-                    continue
-                if device and (packet.serial, packet.model) != (device.serial, device.model):
-                    self._record("identity_changes", device)
-                    break
-                if device is None:
-                    device = self._device_for(packet, connected_at)
-                    if device is None:
+                packet = None
+                try:
+                    packet = decode_telemetry(message)
+                except ProtocolError:
+                    # The checksum passed, so the identity can attribute the error.
+                    self._record("invalid_packets", device or self._known_device(message.identity))
+                else:
+                    if packet is None:
+                        self._record(
+                            "unsupported_packets", device or self._known_device(message.identity)
+                        )
+                if packet is not None:
+                    if device and (packet.serial, packet.model) != (device.serial, device.model):
+                        self._record("identity_changes", device)
                         break
-                self.counters["valid_packets"] += 1
-                device.counters["valid_packets"] += 1
-                if packet.telemetry is not None:
-                    self.counters["telemetry"] += 1
-                    device.receive(packet.telemetry, self.settings.stale_after)
-                device.publish_diagnostics()
+                    if device is None:
+                        device = self._device_for(packet, connected_at)
+                        if device is None:
+                            break
+                    self._accept_packet(packet, device)
+                # Forward every intact frame, including those not decoded locally.
                 if self.endpoint:
+                    target = self._known_device(message.identity)
                     if queue.full():
                         self.counters["queue_full"] += 1
-                        device.cloud_result("queue_full")
-                        continue
-                    queue.put_nowait((packet, device))
-                    if relay_task is None:
-                        relay_task = asyncio.create_task(self._relay(writer, queue))
+                        if target:
+                            target.cloud_result("queue_full")
+                    else:
+                        queue.put_nowait((packet or message, target))
+                        if relay_task is None:
+                            relay_task = asyncio.create_task(self._relay(writer, queue))
         except TimeoutError:
             self._record("read_timeouts", device)
         except OSError:
             self._record("connection_errors", device)
+        except asyncio.CancelledError:
+            drain = False
+            raise
         finally:
             try:
-                if eof and relay_task is not None and not relay_task.done():
+                # Received frames are still forwarded unless we are shutting down.
+                if drain and relay_task is not None and not relay_task.done():
                     try:
                         async with asyncio.timeout(RELAY_DRAIN_TIMEOUT):
                             await queue.join()
@@ -279,32 +348,72 @@ class GoodWeServer:
                     await asyncio.gather(relay_task, return_exceptions=True)
                 await close_writer(writer)
 
+    def _accept_packet(self, packet: DeviceFrame, device: DeviceState) -> None:
+        self.counters["valid_packets"] += 1
+        device.counters["valid_packets"] += 1
+        if packet.telemetry is not None:
+            if reason := device.screen(packet):
+                self._record(reason, device)
+            else:
+                self.counters["telemetry"] += 1
+                device.receive(packet.telemetry, self.settings.stale_after)
+        device.publish_diagnostics()
+
     async def _relay(
         self,
         writer: asyncio.StreamWriter,
-        queue: asyncio.Queue[tuple[DeviceFrame, DeviceState]],
+        queue: asyncio.Queue[tuple[DeviceFrame, DeviceState | None]],
     ) -> None:
         session = RelaySession(self.endpoint, writer)
         try:
             while True:
                 packet, device = await queue.get()
-                if packet.raw in self.endpoint.in_flight:
-                    self._record("duplicate_in_flight", device)
-                    queue.task_done()
-                    continue
                 try:
-                    self.endpoint.in_flight.add(packet.raw)
-                    await session.exchange(packet)
-                except RelayFailure as err:
-                    reason = str(err)
-                    self.counters[reason] += 1
-                    device.cloud_result(reason)
-                else:
-                    if packet.kind != 0x10:
-                        self.counters["cloud_success"] += 1
-                        device.cloud_result("healthy")
+                    await self._forward(session, packet, device)
+                except Exception as err:  # One bad exchange must not stop forwarding.
+                    self._internal_error(err)
+                    await session.close()
                 finally:
-                    self.endpoint.in_flight.discard(packet.raw)
                     queue.task_done()
         finally:
             await session.close()
+
+    async def _forward(
+        self, session: RelaySession, packet: DeviceFrame, device: DeviceState | None
+    ) -> None:
+        if packet.raw in self.endpoint.in_flight:
+            self._record("duplicate_in_flight", device)
+            return
+        self.endpoint.in_flight.add(packet.raw)
+        try:
+            confirmed = await session.exchange(packet)
+        except RelayFailure as err:
+            reason = str(err)
+            self.counters[reason] += 1
+            if device:
+                device.cloud_result(reason)
+            self._log_forwarding(packet.identity, reason)
+        else:
+            if confirmed:
+                self.counters["cloud_success"] += 1
+                if device:
+                    device.cloud_result("healthy")
+                self._log_forwarding(packet.identity, None)
+        finally:
+            self.endpoint.in_flight.discard(packet.raw)
+            for name, count in session.events.items():
+                self._record(name, device, count)
+
+    def _log_forwarding(self, identity: bytes, failure: str | None) -> None:
+        """Log when a device's forwarding starts failing and when it recovers."""
+        if failure == "retry_backoff":
+            return
+        if failure is None:
+            if identity in self._failing:
+                self._failing.discard(identity)
+                _LOGGER.info("GoodWe SEMS forwarding recovered")
+        elif identity not in self._failing and len(self._failing) < MAX_DEVICES:
+            self._failing.add(identity)
+            _LOGGER.warning(
+                "GoodWe SEMS forwarding is failing (%s). Local telemetry is unaffected", failure
+            )

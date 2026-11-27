@@ -26,7 +26,7 @@
         "data_description": {
           "listen_port": "Set this to the port your devices connect to, normally 20001.",
           "stale_after": "Measurements become unavailable after this long without current telemetry.",
-          "forward_to_cloud": "Send supported GoodWe messages to the upstream endpoint.",
+          "forward_to_cloud": "Send every intact device message to the upstream endpoint. Only recognized replies are returned to devices.",
           "upstream_host": "Use a hostname resolved outside the GoodWe device DNS override.",
           "upstream_port": "Normally 20001.",
           "upstream_address": "Optional public IP address. Leave blank to use the hostname.",

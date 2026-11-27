@@ -50,9 +50,11 @@ def _options_schema(defaults: dict) -> vol.Schema:
             vol.Required("upstream_port", default=defaults["upstream_port"]): vol.All(
                 int, vol.Range(min=1, max=65535)
             ),
-            vol.Optional("upstream_address", default=defaults["upstream_address"]): (
-                selector.TextSelector()
-            ),
+            # A suggested value, because a default would restore a cleared override.
+            vol.Optional(
+                "upstream_address",
+                description={"suggested_value": defaults.get("upstream_address", "")},
+            ): selector.TextSelector(),
             vol.Required("solar_offset_w", default=defaults["solar_offset_w"]): vol.All(
                 int, vol.Range(min=0, max=50)
             ),

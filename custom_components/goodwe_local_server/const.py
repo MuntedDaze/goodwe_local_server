@@ -13,7 +13,7 @@ class Settings:
     """Listener, cloud and meter options."""
 
     listen_port: int = DEFAULT_PORT
-    stale_after: int = 90
+    stale_after: int = 150
     forward_to_cloud: bool = False
     upstream_host: str = DEFAULT_UPSTREAM
     upstream_port: int = DEFAULT_PORT

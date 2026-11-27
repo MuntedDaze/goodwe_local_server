@@ -12,7 +12,15 @@ from custom_components.goodwe_local_server.const import Settings
 from custom_components.goodwe_local_server.protocol import DEVICE_PREFIX, read_frame
 from custom_components.goodwe_local_server.relay import RelayEndpoint, RelayFailure
 
-from .helpers import capture, device_packet, meter_payload, reply_packet, tcp_client, until
+from .helpers import (
+    capture,
+    device_packet,
+    meter_payload,
+    reply_packet,
+    stamp,
+    tcp_client,
+    until,
+)
 
 
 @asynccontextmanager
@@ -51,10 +59,14 @@ async def fake_sems(monkeypatch, on_connection):
         try:
             yield
         finally:
-            active = tuple(tasks)
+            # Let handlers finish closing before cancelling any that are stuck.
+            if active := tuple(tasks):
+                await asyncio.wait(active, timeout=0.5)
             for task in active:
                 task.cancel()
-            await asyncio.gather(*active)
+            for result in await asyncio.gather(*active, return_exceptions=True):
+                if isinstance(result, Exception):
+                    raise result
 
 
 async def test_offline_fragmentation_multiple_frames_and_concurrent_devices():
@@ -109,13 +121,13 @@ async def test_backfill_and_truncation_do_not_refresh_or_generate_readings():
 async def test_reporting_interval_ignores_replay_bursts_and_offline_gaps():
     async with listening(Settings(stale_after=3)) as (runtime, port):
         async with tcp_client(port) as (_reader, writer):
-            writer.write(device_packet())
+            writer.write(device_packet(sent=stamp(second=1)))
             device = await until(lambda: runtime.devices.get("TEST0001"))
             device.received_at -= 1.8
-            writer.write(device_packet())
+            writer.write(device_packet(sent=stamp(second=2)))
             assert await until(lambda: device.interval) == pytest.approx(1.8, abs=0.1)
             device.received_at -= 5
-            writer.write(device_packet() + device_packet())
+            writer.write(device_packet(sent=stamp(second=3)) + device_packet(sent=stamp(second=4)))
             await until(lambda: device.counters["telemetry"] == 4)
             assert device.interval == pytest.approx(1.8, abs=0.1)
 
@@ -163,7 +175,7 @@ async def test_cloud_ack_and_time_sync_passthrough_with_filtering(monkeypatch):
         listening(Settings(forward_to_cloud=True)) as (runtime, port),
     ):
         async with tcp_client(port) as (reader, writer):
-            writer.write(time_sync + metrics + device_packet(kind=0x99))
+            writer.write(time_sync + metrics + device_packet()[:-1] + b"\0")
             writer.write_eof()
             assert await asyncio.wait_for(reader.read(), 1) == (
                 b"\x01\x02" + sync_replies + b"\x01\x02" + ack
@@ -173,7 +185,7 @@ async def test_cloud_ack_and_time_sync_passthrough_with_filtering(monkeypatch):
         assert device.cloud_health == "healthy"
         assert device.counters["cloud_success"] == 2
         assert device.counters["telemetry"] == 1
-        assert device.counters["unsupported_packets"] == 1
+        assert device.counters["invalid_packets"] == 1
 
 
 async def test_local_telemetry_during_upstream_timeout_and_bounded_queue(monkeypatch):
@@ -325,7 +337,7 @@ async def test_cloud_rejection_and_matching_invalid_reply_remain_local(monkeypat
             await until(lambda: device.cloud_health == "cloud_rejected")
             assert device.fresh
         async with tcp_client(port) as (reader, writer):
-            writer.write(device_packet())
+            writer.write(device_packet(sent=stamp(second=1)))
             await until(lambda: device.cloud_health == "invalid_reply")
             assert device.fresh
             assert device.counters["telemetry"] == 2

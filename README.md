@@ -11,9 +11,13 @@ GoodWe so SEMS monitoring can continue alongside local telemetry.
 | GW8KAU-DT inverter (`58000DTA`) | v0.1 DT inverter entities |
 
 Keep the standard Home Assistant GoodWe integration installed for your local
-inverter. The DNS G3 wire model `53000DSC` can pass documented traffic to SEMS
-when forwarding is enabled. This integration does not publish local DNS G3
-inverter entities.
+inverter. This integration does not publish local DNS G3 inverter entities.
+
+> [!WARNING]
+> Forwarding is **off** by default. Every GoodWe device that uses your DNS
+> override, including a DNS G3 inverter you did not intend to redirect, then
+> stops reaching SEMS. Either scope the override to the meter, or enable
+> **Forward to GoodWe SEMS** so that all redirected devices are relayed.
 
 ## Install
 
@@ -55,22 +59,31 @@ output during commissioning. Channel 3 is unused on the HK1000.
 
 The default offset is 0 W. Set an offset after measuring a repeatable nighttime
 bias. The raw CT2 reading remains visible, and the offset affects the new solar
-generation and household consumption readings. A negative raw CT2 reading
-remains visible on **L2 Export Power** and contributes zero generation.
-Household consumption therefore includes any inverter standby draw imported
-from the grid.
+generation and household consumption readings. A CT2 reading from -100 to 0 W is
+treated as inverter standby draw or noise and contributes zero generation, so
+household consumption includes that draw. Below -100 W, **Solar generation
+power** and **Household consumption power** are unavailable: the clamp is likely
+reversed or on a different circuit, and the raw value stays visible on **L2
+Export Power**. At least one published HK1000 installation reports CT2 this way.
+The integration cannot detect a reversed grid clamp, so verify the direction of
+**Signed grid power** during commissioning.
 
 Existing total and phase entities keep their IDs and calculations. The
 HK1000's combined totals include fields across both CTs. Use the dedicated
 lifetime counters for grid and solar energy statistics once commissioning is
 complete. Invalid or stale readings become unavailable.
 
+A report refreshes readings only if it is new. A byte-identical repeat is
+ignored. A report with an older device timestamp is ignored too, unless a
+second, later report at least five seconds afterwards shows that the device
+clock was moved back. Cached or backfill reports never update local readings.
+
 ## Configuration
 
 | Option | Default | Behavior |
 | --- | --- | --- |
 | Local TCP port | 20001 | IPv4 LAN listener. Leave at 20001 for devices that use the factory endpoint. |
-| Telemetry timeout | 90 seconds | Configurable from 15 to 3600 seconds. Set it above the regular reporting interval. |
+| Telemetry timeout | 150 seconds | Configurable from 15 to 3600 seconds. The default tolerates one missed report at a 60 second cadence. |
 | Forward to GoodWe SEMS | Off | Enables a bounded relay for supported traffic. |
 | Upstream hostname and TCP port | `tcp.goodwe-power.com`, 20001 | Set the endpoint offered to Home Assistant by DNS. |
 | Upstream IP override | Blank | Optional public IPv4 or IPv6 address, taking precedence over the hostname. |
@@ -96,12 +109,23 @@ An in-flight frame guard also detects traffic routed back to the listener.
 
 ### Traffic and acknowledgements
 
-With forwarding enabled, documented current and backfill message types and known
-time synchronisation exchanges pass through for recognized models. The relay
-preserves the bytes of accepted device messages and matching GoodWe replies.
-It drops unknown messages, unsolicited remote-configuration or firmware
-traffic, and undocumented replies. Cloud functions that depend on those
-messages are outside the supported relay behavior.
+With forwarding enabled, every device message with intact framing and checksum
+is sent to SEMS unchanged. This covers models, message types and payloads that
+the integration does not decode locally, because those devices rely on the
+relay once DNS points them at Home Assistant. Corrupt frames are dropped.
+
+Traffic from SEMS is restricted. Only acknowledgements, rejections and clock
+messages that match the identity of the message just sent are returned to the
+device, plus the two-byte keepalive. Remote-configuration, firmware and any
+other undocumented replies are discarded and counted as
+`cloud_replies_dropped`. Cloud functions that depend on them do not work through
+this relay.
+
+After a failure the relay pauses for 10 seconds, doubling to at most 60 seconds
+while failures continue. The pause persists across new device connections. DNS
+and connection failures pause all devices; a reply failure pauses only the
+affected device. Messages received during a pause are **not stored or resent**,
+so SEMS can have gaps after an outage unless the device itself resends them.
 
 Without forwarding, Home Assistant only consumes local telemetry. The
 protocol research contains genuine cloud acknowledgements, but the requirements
@@ -116,9 +140,10 @@ connections and cloud reply processing.
 | --- | --- |
 | Listener cannot start | Check the configured port and whether another integration or container already binds it. |
 | No device appears | Verify device-side DNS, TCP port reachability, VLAN/firewall rules and that Home Assistant receives a known GoodWe frame. |
-| Stale or unavailable telemetry | Check last valid telemetry and last connection. Archived backfill and invalid frames do not make data fresh. Ensure the timeout exceeds the observed interval. |
+| Stale or unavailable telemetry | Check last valid telemetry and last connection. Backfill, invalid, repeated and out-of-order frames do not make data fresh; check the packet counters. Ensure the timeout exceeds the observed interval. |
+| Solar and household power unavailable while grid power updates | CT2 reads below -100 W (check clamp direction and placement), or the inputs imply negative household consumption. |
 | Upstream address blocked | Home Assistant is resolving only local or nonpublic destinations. Fix split DNS or use an explicit real address. |
-| Cloud forwarding fails while local values update | Check upstream DNS, route, port and SEMS. The cloud health entity shows the outcome of the most recent exchange. |
+| Cloud forwarding fails while local values update | Check upstream DNS, route, port and SEMS. The cloud health entity shows the outcome of the most recent exchange, and the Home Assistant log records when forwarding fails and recovers. |
 | Unexpected HK1000 direction or house power | Compare raw L1/L2 readings with the expected wiring and the physical commissioning steps. |
 
 Download **Diagnostics** from the integration menu for status and counters. The
@@ -130,12 +155,20 @@ recognized packet. Before that point errors appear in the aggregate counts.
 ## Development and evidence
 
 See the [upstream audit and protocol notes](docs/audit.md) for the evidence,
-lifecycle design and future source-selection interface.
+lifecycle design and future source-selection interface, and the
+[independent v0.2 audit](docs/independent-audit.md) for the second review's
+findings and remaining uncertainties.
+
+On Windows the tests also run natively with Python 3.14: create the virtual
+environment, install `requirements-dev.txt` and run the same commands. One test
+fixture creates a symbolic link, which needs Developer Mode.
+
+On Linux, or as the setup script of a Codex cloud environment, run
+`bash scripts/setup.sh`. It creates `.venv` with Python 3.14.2 or later and
+installs the pinned dependencies. Then:
 
 ```sh
-python3.14 -m venv .venv
 . .venv/bin/activate
-python -m pip install -r requirements-dev.txt
 ruff check .
 ruff format --check .
 python -m pytest --cov=custom_components.goodwe_local_server --cov-report=term-missing

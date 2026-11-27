@@ -1,5 +1,9 @@
 # Upstream audit
 
+This is the development audit of v0.1. The
+[independent v0.2 audit](independent-audit.md) corrected several statements and
+behaviours, and this page reflects the corrected design.
+
 Audited fork baseline `42880e2` on `main`, including the v0.1 integration,
 manifest, config flow, README, license and HK1000 support history. The protocol
 evidence includes the teardown and recorded packet fixtures, plus GoodWe's
@@ -14,7 +18,7 @@ installation instructions. [Fork baseline](https://github.com/MuntedDaze/goodwe_
 | Validation | Fixed slicing happened before length, identifier, CRC or AES alignment checks. Short register slices decoded as zero. | Validate bounds, the Modbus CRC-16, ASCII identity, model and payload shape before using registers. The CRC covers the entire prefix, length and body. Its wire byte order is big-endian from devices and little-endian from SEMS. |
 | Connection ownership | The listener handle was discarded. Connections had no reliable cleanup, timeout or capacity limit. | One listener per entry, up to 32 device connections and 64 device records per runtime. Bound frame reads and socket drains. Close and cancel client, cloud and expiry work on unload and shutdown. |
 | Multiple devices | Devices shared one sensor table keyed by serial, and setup and processing were driven directly by individual reads. | Associate each framed connection with its first validated identity. Accept independent concurrent connections and keep per-device state. |
-| Forwarding | A DNS override could point upstream back to Home Assistant. DNS, connection or reply failures could block local state updates. | Commit local data first. The relay uses a queue of eight frames per connection, checked numeric upstream addresses, short DNS caching and bounded TCP operations. It tries new frames after failure. Duplicate frames in flight cannot spawn a relay loop. |
+| Forwarding | A DNS override could point upstream back to Home Assistant. DNS, connection or reply failures could block local state updates. | Commit local data first. The relay uses a queue of 128 frames per connection, checked numeric upstream addresses, short DNS caching, bounded TCP operations and a backoff shared between device connections. Duplicate frames in flight cannot spawn a relay loop. |
 | Freshness | Per-entity polling consulted one last-seen map and could delay stale transitions. | Use a monotonic clock and a per-device expiry timer. Keep diagnostic entities visible when measurement entities become unavailable. |
 | HA integration | Legacy config flow created an empty entry and the sensor platform started an unmanaged listener. | Keep the existing entry format and apply defaults to empty options. Add translated configuration, options with reload, diagnostics and HACS layout. |
 | Dependencies | The manifest listed an unpinned hexdump package but the sensor imported `Crypto` implicitly. | Remove hexdump. Use Home Assistant Core's pinned `cryptography` dependency and the declared HA `network` integration. |
@@ -30,23 +34,23 @@ envelope. CRC and encryption are insufficient to authenticate the device.
 Treat the LAN and local firewall as the trust boundary.
 
 Malformed prefixes, lengths and truncated frames close the connection to
-re-establish framing on a new socket. A complete frame with a bad checksum or
-invalid telemetry can be dropped while the next structurally framed message is
-still read. Recognized data type `0x04` supplies local telemetry. Type `0x45`
-may represent cached or catch-up telemetry and is eligible for relay only. The
-listener uses its local receipt time for freshness. Cadence is the most recent
+re-establish framing on a new socket. A complete frame with a bad checksum is
+dropped while the next structurally framed message is still read. A frame with a
+good checksum but unsupported or invalid content never updates local readings,
+yet is still eligible for relay. Recognized data type `0x04` supplies local
+telemetry. Type `0x45` may represent cached or catch-up telemetry and is relay
+only. The listener uses its local receipt time for freshness, and uses the
+envelope timestamp only to reject older reports. Cadence is the most recent
 interval between accepted readings, excluding subsecond bursts and gaps longer
 than the stale threshold.
 
-The relay sends one request at a time on each upstream connection. It allows
-documented ACK/NACK and matching time sync responses with valid lengths, CRC,
-identity and payload shapes. A HomeKit time sync request can receive an ACK
-followed by a clock response. Documented device clock acknowledgements can be
-forwarded without waiting for a reply. The relay passes the observed two-byte
-keepalive during an exchange and drops unknown messages. It closes a failed upstream exchange, applies
-a short reconnect backoff and keeps the local socket reading. A later frame can
-open a new cloud connection. Saturation drops new relay work while retaining
-local reads.
+The relay sends one request at a time on each upstream connection. It returns
+only ACK/NACK replies and clock messages with valid lengths, CRC, identity and
+payload shapes, plus the two-byte keepalive. The published clock message uses
+type `0x01 0x16`. A published DNS G3 capture shows SEMS acknowledging that
+inverter's time sync request with type `0x01 0x03` and sixteen zero bytes. A
+clock message after a time sync acknowledgement is optional. The device's own
+clock acknowledgement (`0x10`) is forwarded without waiting for a reply.
 
 ## Register evidence and compatibility
 

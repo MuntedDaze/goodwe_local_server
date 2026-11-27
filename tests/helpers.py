@@ -26,7 +26,12 @@ def envelope(prefix, body, byteorder):
     return frame + crc16(frame).to_bytes(2, byteorder)
 
 
-def device_packet(model=b"91000HKU", serial=b"TEST0001", *, kind=4, payload=None):
+def stamp(hour=0, minute=0, second=0):
+    """Build a device envelope timestamp (Y M D H m s)."""
+    return bytes([26, 11, 28, hour, minute, second])
+
+
+def device_packet(model=b"91000HKU", serial=b"TEST0001", *, kind=4, payload=None, sent=bytes(6)):
     family = 3 if model.endswith(b"HKU") else 1
     if payload is None:
         payload = meter_payload()
@@ -34,8 +39,20 @@ def device_packet(model=b"91000HKU", serial=b"TEST0001", *, kind=4, payload=None
     if kind == 0x10:
         body += model + serial + IV
     else:
-        body += bytes(2) + model + serial + IV + bytes(6)
+        body += bytes(2) + model + serial + IV + sent
     return envelope(b"POSTGW", body + encrypt(payload), "big")
+
+
+def captured_body(name, family, kind):
+    """Frame a published decrypted-envelope body whose header was not published."""
+    return envelope(b"POSTGW", bytes([family, kind]) + capture(name), "big")
+
+
+def time_set_packet(model, serial=b"TEST0001"):
+    """Build the documented (0x01, 0x16) SEMS time-set reply."""
+    payload = bytes.fromhex("12161218") + stamp(5, 19, 14) + bytes(6)
+    body = bytes([1, 0x16]) + model + serial + IV + encrypt(payload)
+    return envelope(b"GW", body, "little")
 
 
 def reply_packet(model=b"91000HKU", serial=b"TEST0001", *, kind=4, payload=bytes(16)):

@@ -9,11 +9,15 @@
    copy. They were Python constants in v0.1 and must be entered manually in the
    new options. Save these values privately.
 3. Stop Home Assistant and replace the component directory with the contents of
-   the new `custom_components/goodwe_local_server` directory. Start Home
+   the new `custom_components/goodwe_local_server` directory. The repository
+   layout changed: if v0.1 was installed as a git checkout inside
+   `config/custom_components/goodwe_local_server`, do **not** `git pull` there,
+   because the integration files now sit two directories deeper. Start Home
    Assistant. Keep the existing GoodWe Local Server config entry and device
    and entity registries. The entry initially uses local-only defaults unless
    options already exist.
-4. Restore forwarding in **Settings → Devices & services → GoodWe Local Server
+4. Restore forwarding immediately if any redirected device needs SEMS, in
+   **Settings → Devices & services → GoodWe Local Server
    → Configure** if it was enabled before the upgrade. Set the upstream port
    and valid hostname or address using the [DNS instructions](../README.md#configuration).
    Restore any custom listener port. Saving reloads the entry.
@@ -23,6 +27,12 @@
    original sensors. New statistics start when the new entities are used.
 
 ## Rollback
+
+v0.1 declares the `simple-hexdump` requirement, so Home Assistant may need
+internet access to install it on the first start after rolling back. Entities
+that only exist in v0.2 remain in the registry as unavailable; delete them if
+they are not wanted. Their recorded statistics are not merged into the original
+sensors.
 
 1. Stop Home Assistant. Restore the saved component directory, including any
    v0.1 relay edits, and restore any DNS changes made during commissioning.
@@ -64,11 +74,22 @@ before relying on the new sensors or their statistics.
    Record whether the meter needs a cloud ACK or time sync to keep sending and
    whether SEMS resumes after restoration. Capture only authorized traffic and
    sanitize captures before sharing them.
-7. Observe an integration reload and Home Assistant restart. Confirm recovery
+7. Before redirecting a DNS G3 inverter, or if it already follows the override,
+   enable forwarding and confirm that SEMS keeps receiving its data over at
+   least a full day, including the morning restart. Download diagnostics and
+   record `cloud_success`, `reply_timeout`, `cloud_replies_dropped` and
+   `unsupported_packets`. A steadily rising `cloud_replies_dropped` means SEMS
+   sends replies this relay does not recognize. Remove the override for that
+   inverter if SEMS stops updating.
+8. Over at least 24 hours, record the observed reporting interval and the
+   `duplicate_telemetry`, `out_of_order_telemetry`, `relay_loop` and
+   `queue_full` counters. All should stay at or near zero. Raise the stale
+   threshold if healthy reporting gaps exceed it.
+9. Observe an integration reload and Home Assistant restart. Confirm recovery
    with the same IDs. Stop device reporting for longer than the stale threshold
    and confirm measurements become unavailable, then resume with fresh data.
    Test any connected HK3000 or legacy DT inverter on its own reporting cycle.
 
-The automated suite uses published HK1000 wire captures, synthetic model
+The automated suite uses published HK1000 and DNS G3 captures, synthetic model
 fixtures, loopback TCP and a disposable Home Assistant instance. Live-device
 and site internet-outage verification are commissioning checks.
