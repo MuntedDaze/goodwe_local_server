@@ -1,0 +1,2737 @@
+{
+ "baseline": "42880e2aace6b449ebc8f33aabdd919a278d4d55",
+ "payload": "0b30557a9fc4e90e33587da2c7ec11365b80a5caef14395e83a8cdf2173c6186abd0f51a3f6489aed3f81d42678cb1d6fb20456a8fb4d9fe23486d92b7dc01264b7095badf04294e7398bde2072c51769bc0e50a2f54799ec3e80d32577ca1c6eb10355a7fa4c9ee13385d82a7ccf1163b6085aacff4193e6388add2f71c41668bb0d5fa1f44698eb3d8fd22476c91b6db00254a6f94b9de03284d7297bce1062b50759abfe4092e53789dc2e70c31567ba0c5ea0f34597ea3c8ed12375c81a6cbf0153a5f84a9cef3183d6287acd1f61b40658aafd4f91e43688db2d7fc21466b90b5daff24496e93b8dd02274c7196bbe0052a4f7499bee3082d52779cc1e60b30557a9fc4e90e33587da2c7ec1136",
+ "models": {
+  "93000HKU": [
+   {
+    "unique_id": "TEST0001_l1_energy_exported",
+    "key": "l1_energy_exported",
+    "name": "L1 Energy Exported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 2382460.13,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l2_energy_exported",
+    "key": "l2_energy_exported",
+    "name": "L2 Energy Exported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -3344162.93,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l3_energy_exported",
+    "key": "l3_energy_exported",
+    "name": "L3 Energy Exported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -8903013.83,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_total_energy_exported",
+    "key": "total_energy_exported",
+    "name": "Total Energy Exported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": null,
+    "enabled_default": true,
+    "value": -14628981.530000001,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l1_energy_imported",
+    "key": "l1_energy_imported",
+    "name": "L1 Energy Imported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -20355602.03,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l2_energy_imported",
+    "key": "l2_energy_imported",
+    "name": "L2 Energy Imported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 16867447.87,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l3_energy_imported",
+    "key": "l3_energy_imported",
+    "name": "L3 Energy Imported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 11140824.81,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_total_energy_imported",
+    "key": "total_energy_imported",
+    "name": "Total Energy Imported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": null,
+    "enabled_default": true,
+    "value": 5414201.75,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l1_voltage",
+    "key": "l1_voltage",
+    "name": "L1 Voltage",
+    "has_entity_name": true,
+    "device_class": "voltage",
+    "state_class": "measurement",
+    "unit": "V",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 1854.1000000000001,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l2_voltage",
+    "key": "l2_voltage",
+    "name": "L2 Voltage",
+    "has_entity_name": true,
+    "device_class": "voltage",
+    "state_class": "measurement",
+    "unit": "V",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -2797.7000000000003,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l3_voltage",
+    "key": "l3_voltage",
+    "name": "L3 Voltage",
+    "has_entity_name": true,
+    "device_class": "voltage",
+    "state_class": "measurement",
+    "unit": "V",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -921.5,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l1_peak_current",
+    "key": "l1_peak_current",
+    "name": "L1 Peak Current",
+    "has_entity_name": true,
+    "device_class": "current",
+    "state_class": "measurement",
+    "unit": "A",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 288.21,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l2_peak_current",
+    "key": "l2_peak_current",
+    "name": "L2 Peak Current",
+    "has_entity_name": true,
+    "device_class": "current",
+    "state_class": "measurement",
+    "unit": "A",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 10.65,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l3_peak_current",
+    "key": "l3_peak_current",
+    "name": "L3 Peak Current",
+    "has_entity_name": true,
+    "device_class": "current",
+    "state_class": "measurement",
+    "unit": "A",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -264.35,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l1_export_power",
+    "key": "l1_export_power",
+    "name": "L1 Export Power",
+    "has_entity_name": true,
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit": "W",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -502846383,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l2_export_power",
+    "key": "l2_export_power",
+    "name": "L2 Export Power",
+    "has_entity_name": true,
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit": "W",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 1989918949,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l3_export_power",
+    "key": "l3_export_power",
+    "name": "L3 Export Power",
+    "has_entity_name": true,
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit": "W",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 170873977,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_total_export_power",
+    "key": "total_export_power",
+    "name": "Total Export Power",
+    "has_entity_name": true,
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit": "W",
+    "entity_category": null,
+    "enabled_default": true,
+    "value": -1631328243,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x00_0x06",
+    "key": "0x00_0x06",
+    "name": "0x00-0x06",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "0b 30 55 7a 9f c4 e9",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x0b_0x0c",
+    "key": "0x0b_0x0c",
+    "name": "0x0b-0x0c",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "a2 c7",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x11_0x12",
+    "key": "0x11_0x12",
+    "name": "0x11-0x12",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "80 a5",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x17_0x18",
+    "key": "0x17_0x18",
+    "name": "0x17-0x18",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "5e 83",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x1d_0x1e",
+    "key": "0x1d_0x1e",
+    "name": "0x1d-0x1e",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "3c 61",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x23_0x24",
+    "key": "0x23_0x24",
+    "name": "0x23-0x24",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "1a 3f",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x29_0x2a",
+    "key": "0x29_0x2a",
+    "name": "0x29-0x2a",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "f8 1d",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x2f_0x30",
+    "key": "0x2f_0x30",
+    "name": "0x2f-0x30",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "d6 fb",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x35_0x36",
+    "key": "0x35_0x36",
+    "name": "0x35-0x36",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "b4 d9",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x37_0x38",
+    "key": "0x37_0x38",
+    "name": "0x37-0x38",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "fe 23",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x5b_0x5e",
+    "key": "0x5b_0x5e",
+    "name": "0x5b-0x5e",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "32 57 7c a1",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x5f_0x5f",
+    "key": "0x5f_0x5f",
+    "name": "0x5f-0x5f",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": "measurement",
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": -58,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x60_0x6f",
+    "key": "0x60_0x6f",
+    "name": "0x60-0x6f",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "eb 10 35 5a 7f a4 c9 ee 13 38 5d 82 a7 cc f1 16",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK3000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   }
+  ],
+  "91000HKU": [
+   {
+    "unique_id": "TEST0001_l1_energy_exported",
+    "key": "l1_energy_exported",
+    "name": "L1 Energy Exported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 2382460.13,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l2_energy_exported",
+    "key": "l2_energy_exported",
+    "name": "L2 Energy Exported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -3344162.93,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l3_energy_exported",
+    "key": "l3_energy_exported",
+    "name": "L3 Energy Exported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -8903013.83,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_total_energy_exported",
+    "key": "total_energy_exported",
+    "name": "Total Energy Exported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": null,
+    "enabled_default": true,
+    "value": -14628981.530000001,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l1_energy_imported",
+    "key": "l1_energy_imported",
+    "name": "L1 Energy Imported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -20355602.03,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l2_energy_imported",
+    "key": "l2_energy_imported",
+    "name": "L2 Energy Imported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 16867447.87,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l3_energy_imported",
+    "key": "l3_energy_imported",
+    "name": "L3 Energy Imported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 11140824.81,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_total_energy_imported",
+    "key": "total_energy_imported",
+    "name": "Total Energy Imported",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": null,
+    "enabled_default": true,
+    "value": 5414201.75,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l1_voltage",
+    "key": "l1_voltage",
+    "name": "L1 Voltage",
+    "has_entity_name": true,
+    "device_class": "voltage",
+    "state_class": "measurement",
+    "unit": "V",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 1854.1000000000001,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l2_voltage",
+    "key": "l2_voltage",
+    "name": "L2 Voltage",
+    "has_entity_name": true,
+    "device_class": "voltage",
+    "state_class": "measurement",
+    "unit": "V",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -2797.7000000000003,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l3_voltage",
+    "key": "l3_voltage",
+    "name": "L3 Voltage",
+    "has_entity_name": true,
+    "device_class": "voltage",
+    "state_class": "measurement",
+    "unit": "V",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -921.5,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l1_peak_current",
+    "key": "l1_peak_current",
+    "name": "L1 Peak Current",
+    "has_entity_name": true,
+    "device_class": "current",
+    "state_class": "measurement",
+    "unit": "A",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 288.21,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l2_peak_current",
+    "key": "l2_peak_current",
+    "name": "L2 Peak Current",
+    "has_entity_name": true,
+    "device_class": "current",
+    "state_class": "measurement",
+    "unit": "A",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 10.65,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l3_peak_current",
+    "key": "l3_peak_current",
+    "name": "L3 Peak Current",
+    "has_entity_name": true,
+    "device_class": "current",
+    "state_class": "measurement",
+    "unit": "A",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -264.35,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l1_export_power",
+    "key": "l1_export_power",
+    "name": "L1 Export Power",
+    "has_entity_name": true,
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit": "W",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -502846383,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l2_export_power",
+    "key": "l2_export_power",
+    "name": "L2 Export Power",
+    "has_entity_name": true,
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit": "W",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 1989918949,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l3_export_power",
+    "key": "l3_export_power",
+    "name": "L3 Export Power",
+    "has_entity_name": true,
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit": "W",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 170873977,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_total_export_power",
+    "key": "total_export_power",
+    "name": "Total Export Power",
+    "has_entity_name": true,
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit": "W",
+    "entity_category": null,
+    "enabled_default": true,
+    "value": -1631328243,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x00_0x06",
+    "key": "0x00_0x06",
+    "name": "0x00-0x06",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "0b 30 55 7a 9f c4 e9",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x0b_0x0c",
+    "key": "0x0b_0x0c",
+    "name": "0x0b-0x0c",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "a2 c7",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x11_0x12",
+    "key": "0x11_0x12",
+    "name": "0x11-0x12",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "80 a5",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x17_0x18",
+    "key": "0x17_0x18",
+    "name": "0x17-0x18",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "5e 83",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x1d_0x1e",
+    "key": "0x1d_0x1e",
+    "name": "0x1d-0x1e",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "3c 61",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x23_0x24",
+    "key": "0x23_0x24",
+    "name": "0x23-0x24",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "1a 3f",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x29_0x2a",
+    "key": "0x29_0x2a",
+    "name": "0x29-0x2a",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "f8 1d",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x2f_0x30",
+    "key": "0x2f_0x30",
+    "name": "0x2f-0x30",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "d6 fb",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x35_0x36",
+    "key": "0x35_0x36",
+    "name": "0x35-0x36",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "b4 d9",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x37_0x38",
+    "key": "0x37_0x38",
+    "name": "0x37-0x38",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "fe 23",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x5b_0x5e",
+    "key": "0x5b_0x5e",
+    "name": "0x5b-0x5e",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "32 57 7c a1",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x5f_0x5f",
+    "key": "0x5f_0x5f",
+    "name": "0x5f-0x5f",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": "measurement",
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": -58,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x60_0x6f",
+    "key": "0x60_0x6f",
+    "name": "0x60-0x6f",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "eb 10 35 5a 7f a4 c9 ee 13 38 5d 82 a7 cc f1 16",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "HomeKit",
+     "model_id": "HK1000",
+     "name": "Energy Meter",
+     "serial_number": "TEST0001"
+    }
+   }
+  ],
+  "58000DTA": [
+   {
+    "unique_id": "TEST0001_0x00_0x14",
+    "key": "0x00_0x14",
+    "name": "0x00-0x14",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "0b 30 55 7a 9f c4 e9 0e 33 58 7d a2 c7 ec 11 36 5b 80 a5 ca ef",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_timestamp",
+    "key": "timestamp",
+    "name": "Timestamp",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "14 39 5e 83 a8 cd",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_pv1_voltage",
+    "key": "pv1_voltage",
+    "name": "PV1 Voltage",
+    "has_entity_name": true,
+    "device_class": "voltage",
+    "state_class": "measurement",
+    "unit": "V",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -356.1,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_pv1_current",
+    "key": "pv1_current",
+    "name": "PV1 Current",
+    "has_entity_name": true,
+    "device_class": "current",
+    "state_class": "measurement",
+    "unit": "A",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 1545.7,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_pv2_voltage",
+    "key": "pv2_voltage",
+    "name": "PV2 Voltage",
+    "has_entity_name": true,
+    "device_class": "voltage",
+    "state_class": "measurement",
+    "unit": "V",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -3106.1000000000004,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_pv2_current",
+    "key": "pv2_current",
+    "name": "PV2 Current",
+    "has_entity_name": true,
+    "device_class": "current",
+    "state_class": "measurement",
+    "unit": "A",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -1204.3,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x23_0x38",
+    "key": "0x23_0x38",
+    "name": "0x23-0x38",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "1a 3f 64 89 ae d3 f8 1d 42 67 8c b1 d6 fb 20 45 6a 8f b4 d9 fe 23",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l1_voltage",
+    "key": "l1_voltage",
+    "name": "L1 Voltage",
+    "has_entity_name": true,
+    "device_class": "voltage",
+    "state_class": "measurement",
+    "unit": "V",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 1854.1000000000001,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l2_voltage",
+    "key": "l2_voltage",
+    "name": "L2 Voltage",
+    "has_entity_name": true,
+    "device_class": "voltage",
+    "state_class": "measurement",
+    "unit": "V",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -2797.7000000000003,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l3_voltage",
+    "key": "l3_voltage",
+    "name": "L3 Voltage",
+    "has_entity_name": true,
+    "device_class": "voltage",
+    "state_class": "measurement",
+    "unit": "V",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -921.5,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l1_current",
+    "key": "l1_current",
+    "name": "L1 Current",
+    "has_entity_name": true,
+    "device_class": "current",
+    "state_class": "measurement",
+    "unit": "A",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 980.3000000000001,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l2_current",
+    "key": "l2_current",
+    "name": "L2 Current",
+    "has_entity_name": true,
+    "device_class": "current",
+    "state_class": "measurement",
+    "unit": "A",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 2882.1000000000004,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l3_current",
+    "key": "l3_current",
+    "name": "L3 Current",
+    "has_entity_name": true,
+    "device_class": "current",
+    "state_class": "measurement",
+    "unit": "A",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -1769.7,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l1_frequency",
+    "key": "l1_frequency",
+    "name": "L1 Frequency",
+    "has_entity_name": true,
+    "device_class": "frequency",
+    "state_class": "measurement",
+    "unit": "Hz",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 10.65,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l2_frequency",
+    "key": "l2_frequency",
+    "name": "L2 Frequency",
+    "has_entity_name": true,
+    "device_class": "frequency",
+    "state_class": "measurement",
+    "unit": "Hz",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 200.83,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_l3_frequency",
+    "key": "l3_frequency",
+    "name": "L3 Frequency",
+    "has_entity_name": true,
+    "device_class": "frequency",
+    "state_class": "measurement",
+    "unit": "Hz",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -264.35,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_total_power",
+    "key": "total_power",
+    "name": "Total Power",
+    "has_entity_name": true,
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit": "W",
+    "entity_category": null,
+    "enabled_default": true,
+    "value": -502846383,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_work_mode",
+    "key": "work_mode",
+    "name": "Work Mode",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "76 9b",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x51_0x56",
+    "key": "0x51_0x56",
+    "name": "0x51-0x56",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "c0 e5 0a 2f 54 79",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x57_0x66",
+    "key": "0x57_0x66",
+    "name": "0x57-0x66",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "9e c3 e8 0d 32 57 7c a1 c6 eb 10 35 5a 7f a4 c9",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_temperature",
+    "key": "temperature",
+    "name": "Temperature",
+    "has_entity_name": true,
+    "device_class": "temperature",
+    "state_class": "measurement",
+    "unit": "\u00b0C",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -458.90000000000003,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x69_0x6c",
+    "key": "0x69_0x6c",
+    "name": "0x69-0x6c",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "38 5d 82 a7",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_todays_energy",
+    "key": "todays_energy",
+    "name": "Todays Energy",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": null,
+    "enabled_default": true,
+    "value": -1307.1000000000001,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_total_energy",
+    "key": "total_energy",
+    "name": "Total Energy",
+    "has_entity_name": true,
+    "device_class": "energy",
+    "state_class": "total_increasing",
+    "unit": "kWh",
+    "entity_category": null,
+    "enabled_default": true,
+    "value": 37299008.5,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_runtime",
+    "key": "runtime",
+    "name": "Runtime",
+    "has_entity_name": true,
+    "device_class": "duration",
+    "state_class": "total_increasing",
+    "unit": "h",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -1429212135,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x77_0x7e",
+    "key": "0x77_0x7e",
+    "name": "0x77-0x7e",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "3e 63 88 ad d2 f7",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_funbit",
+    "key": "funbit",
+    "name": "FunBit",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "1c 41",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_bus_voltage",
+    "key": "bus_voltage",
+    "name": "Bus Voltage",
+    "has_entity_name": true,
+    "device_class": "voltage",
+    "state_class": "measurement",
+    "unit": "V",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": 2625.1000000000004,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_nbus_voltage",
+    "key": "nbus_voltage",
+    "name": "Nbus Voltage",
+    "has_entity_name": true,
+    "device_class": "voltage",
+    "state_class": "measurement",
+    "unit": "V",
+    "entity_category": "diagnostic",
+    "enabled_default": true,
+    "value": -2026.7,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x83_0x86",
+    "key": "0x83_0x86",
+    "name": "0x83-0x86",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "fa 1f 44 69",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x87_0x88",
+    "key": "0x87_0x88",
+    "name": "0x87-0x88",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": "measurement",
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": -29005,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x89_0x90",
+    "key": "0x89_0x90",
+    "name": "0x89-0x90",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "d8 fd 22 47 6c 91 b6 db",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x91_0x92",
+    "key": "0x91_0x92",
+    "name": "0x91-0x92",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": "measurement",
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": 37,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x93_0x96",
+    "key": "0x93_0x96",
+    "name": "0x93-0x96",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "4a 6f 94 b9",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_pv1_current_again",
+    "key": "pv1_current_again",
+    "name": "PV1 Current again",
+    "has_entity_name": true,
+    "device_class": "current",
+    "state_class": "measurement",
+    "unit": "A",
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": -870.1,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_pv2_current_again",
+    "key": "pv2_current_again",
+    "name": "PV2 Current again",
+    "has_entity_name": true,
+    "device_class": "current",
+    "state_class": "measurement",
+    "unit": "A",
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": 1031.7,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x9b_0x9e",
+    "key": "0x9b_0x9e",
+    "name": "0x9b-0x9e",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "72 97 bc e1",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0x9f_0xa2",
+    "key": "0x9f_0xa2",
+    "name": "0x9f-0xa2",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "06 2b 50 75",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0xa3_0xa4",
+    "key": "0xa3_0xa4",
+    "name": "0xa3-0xa4",
+    "has_entity_name": true,
+    "device_class": "temperature",
+    "state_class": "measurement",
+    "unit": "\u00b0C",
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": -2592.1000000000004,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0xa5_0xa6",
+    "key": "0xa5_0xa6",
+    "name": "0xa5-0xa6",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "e4 09",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0xa7_0xa8",
+    "key": "0xa7_0xa8",
+    "name": "0xa7-0xa8",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": "measurement",
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": 11859,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0xa9_0xaa",
+    "key": "0xa9_0xaa",
+    "name": "0xa9-0xaa",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "78 9d",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0xab_0xac",
+    "key": "0xab_0xac",
+    "name": "0xab-0xac",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": "measurement",
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": -15641,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0xad_0xb0",
+    "key": "0xad_0xb0",
+    "name": "0xad-0xb0",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "0c 31 56 7b",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0xb1_0xb2",
+    "key": "0xb1_0xb2",
+    "name": "0xb1-0xb2",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": "measurement",
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": -24379,
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0xb3_0xcc",
+    "key": "0xb3_0xcc",
+    "name": "0xb3-0xcc",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "ea 0f 34 59 7e a3 c8 ed 12 37 5c 81 a6 cb f0 15 3a 5f 84 a9 ce f3 18 3d 62 87",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   },
+   {
+    "unique_id": "TEST0001_0xcd_0x1ff",
+    "key": "0xcd_0x1ff",
+    "name": "0xcd-0x1ff",
+    "has_entity_name": true,
+    "device_class": null,
+    "state_class": null,
+    "unit": null,
+    "entity_category": "diagnostic",
+    "enabled_default": false,
+    "value": "ac d1 f6 1b 40 65 8a af d4 f9 1e 43 68 8d b2 d7 fc 21 46 6b 90 b5 da ff 24 49 6e 93 b8 dd 02 27 4c 71 96 bb e0 05 2a 4f 74 99 be e3 08 2d 52 77 9c c1 e6 0b 30 55 7a 9f c4 e9 0e 33 58 7d a2 c7 ec 11 36",
+    "device": {
+     "identifiers": [
+      [
+       "goodwe_local_server",
+       "TEST0001"
+      ]
+     ],
+     "manufacturer": "GoodWe",
+     "model": "DT Series",
+     "model_id": "GW8KAU-DT",
+     "name": "Solar Inverter",
+     "serial_number": "TEST0001"
+    }
+   }
+  ]
+ }
+}

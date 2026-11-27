@@ -1,0 +1,121 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "GoodWe Local Server",
+        "description": "Start a local TCP listener for GoodWe devices. You can configure the listener and optional cloud forwarding after setup."
+      }
+    },
+    "abort": {
+      "already_configured": "The GoodWe Local Server listener already exists."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "GoodWe Local Server options",
+        "data": {
+          "listen_port": "Local TCP port",
+          "stale_after": "Telemetry timeout (seconds)",
+          "forward_to_cloud": "Forward to GoodWe SEMS",
+          "upstream_host": "Upstream hostname",
+          "upstream_port": "Upstream TCP port",
+          "upstream_address": "Upstream IP override",
+          "solar_offset_w": "HK1000 solar offset (W)"
+        },
+        "data_description": {
+          "listen_port": "Set this to the port your devices connect to, normally 20001.",
+          "stale_after": "Measurements become unavailable after this long without current telemetry.",
+          "forward_to_cloud": "Send every intact device message to the upstream endpoint. Only recognized replies are returned to devices.",
+          "upstream_host": "Use a hostname resolved outside the GoodWe device DNS override.",
+          "upstream_port": "Normally 20001.",
+          "upstream_address": "Optional public IP address. Leave blank to use the hostname.",
+          "solar_offset_w": "Ignore positive solar readings at or below this threshold. The raw CT sensor remains available."
+        }
+      }
+    },
+    "error": {
+      "invalid_hostname": "Enter a valid upstream hostname without a scheme or port.",
+      "invalid_address": "Enter a valid IPv4 or IPv6 address.",
+      "non_public_address": "Enter a public unicast address. Local and reserved addresses can route to the listener."
+    }
+  },
+  "exceptions": {
+    "listen_failed": {
+      "message": "Could not open TCP port {port}. Check whether another service is using it."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "signed_grid_power": {
+        "name": "Signed grid power"
+      },
+      "grid_import_power": {
+        "name": "Grid import power"
+      },
+      "grid_export_power": {
+        "name": "Grid export power"
+      },
+      "solar_generation_power": {
+        "name": "Solar generation power"
+      },
+      "household_consumption_power": {
+        "name": "Household consumption power"
+      },
+      "lifetime_grid_import_energy": {
+        "name": "Lifetime grid import energy"
+      },
+      "lifetime_grid_export_energy": {
+        "name": "Lifetime grid export energy"
+      },
+      "lifetime_solar_generation_energy": {
+        "name": "Lifetime solar generation energy"
+      },
+      "grid_voltage": {
+        "name": "Grid voltage"
+      },
+      "last_telemetry": {
+        "name": "Last valid telemetry"
+      },
+      "last_connection": {
+        "name": "Last connection"
+      },
+      "data_age": {
+        "name": "Data age"
+      },
+      "interval": {
+        "name": "Observed reporting interval"
+      },
+      "connection_health": {
+        "name": "Connection health",
+        "state": {
+          "waiting": "Waiting for telemetry",
+          "receiving": "Receiving",
+          "stale": "Stale"
+        }
+      },
+      "cloud_health": {
+        "name": "Cloud forwarding health",
+        "state": {
+          "disabled": "Disabled",
+          "waiting": "Waiting for a cloud reply",
+          "healthy": "Healthy",
+          "dns_failure": "DNS resolution failed",
+          "blocked_address": "Upstream address blocked",
+          "connect_failed": "Could not connect",
+          "reply_timeout": "Reply timed out",
+          "upstream_disconnected": "Connection closed",
+          "invalid_reply": "Invalid upstream reply",
+          "cloud_rejected": "Rejected by SEMS",
+          "relay_error": "Internal forwarding error"
+        }
+      },
+      "last_cloud_success": {
+        "name": "Last successful cloud reply"
+      },
+      "packet_counters": {
+        "name": "Packet counters"
+      }
+    }
+  }
+}
