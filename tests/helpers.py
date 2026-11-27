@@ -16,8 +16,8 @@ def capture(name):
     return bytes.fromhex((FIXTURES / f"{name}.hex").read_text())
 
 
-def encrypt(payload):
-    encryptor = Cipher(algorithms.AES(bytes([255]) * 16), modes.CBC(IV)).encryptor()
+def encrypt(payload, iv=IV):
+    encryptor = Cipher(algorithms.AES(bytes([255]) * 16), modes.CBC(iv)).encryptor()
     return encryptor.update(payload) + encryptor.finalize()
 
 
@@ -28,19 +28,19 @@ def envelope(prefix, body, byteorder):
 
 def stamp(hour=0, minute=0, second=0):
     """Build a device envelope timestamp (Y M D H m s)."""
-    return bytes([26, 11, 28, hour, minute, second])
+    return bytes([24, 1, 2, hour, minute, second])
 
 
-def device_packet(model=b"91000HKU", serial=b"TEST0001", *, kind=4, payload=None, sent=bytes(6)):
+def device_packet(model=b"91000HKU", serial=b"TEST0001", *, kind=4, payload=None, sent=None, iv=IV):
     family = 3 if model.endswith(b"HKU") else 1
     if payload is None:
         payload = meter_payload()
     body = bytes([family, kind])
     if kind == 0x10:
-        body += model + serial + IV
+        body += model + serial + iv
     else:
-        body += bytes(2) + model + serial + IV + sent
-    return envelope(b"POSTGW", body + encrypt(payload), "big")
+        body += bytes(2) + model + serial + iv + (stamp() if sent is None else sent)
+    return envelope(b"POSTGW", body + encrypt(payload, iv), "big")
 
 
 def captured_body(name, family, kind):
@@ -61,13 +61,13 @@ def reply_packet(model=b"91000HKU", serial=b"TEST0001", *, kind=4, payload=bytes
     return envelope(b"GW", body, "little")
 
 
-def meter_payload(grid=-150, solar=0, *, voltage=2372):
+def meter_payload(grid=-150, solar=0, *, voltage=2372, import_energy=32000):
     payload = bytearray(0x70)
     for offset, size, value in (
         (0x07, 4, 4999),
         (0x0D, 4, 54157),
         (0x19, 4, 59156),
-        (0x1F, 4, 32000),
+        (0x1F, 4, import_energy),
         (0x31, 4, 999999),
         (0x39, 2, voltage),
         (0x41, 2, 84),

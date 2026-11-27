@@ -39,8 +39,8 @@ dropped while the next structurally framed message is still read. A frame with a
 good checksum but unsupported or invalid content never updates local readings,
 yet is still eligible for relay. Recognized data type `0x04` supplies local
 telemetry. Type `0x45` may represent cached or catch-up telemetry and is relay
-only. The listener uses its local receipt time for freshness, and uses the
-envelope timestamp only to reject older reports. Cadence is the most recent
+only. The listener uses monotonic receipt time for freshness and the device
+calendar for replay and clock-jump checks. Cadence is the most recent
 interval between accepted readings, excluding subsecond bursts and gaps longer
 than the stale threshold.
 

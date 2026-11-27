@@ -38,6 +38,10 @@ ENDPOINT_FAILURES = ("dns_failure", "blocked_address", "connect_failed")
 class RelayFailure(Exception):
     """A cloud forwarding failure with a privacy-safe diagnostic reason."""
 
+    def __init__(self, reason: str, *, blocked_by: str | None = None) -> None:
+        super().__init__(reason)
+        self.blocked_by = blocked_by
+
 
 def _parse_address(address: str) -> IPv4Address | IPv6Address:
     """Normalize notation, IPv6 scopes and IPv4-mapped addresses."""
@@ -82,23 +86,36 @@ class RelayEndpoint:
         self._refresh_at = 0.0
         self._dns_error: str | None = None
         # The None key covers the endpoint. Other keys are device identities.
-        self._backoff: dict[bytes | None, tuple[float, int]] = {}
+        self._backoff: dict[bytes | None, tuple[float, int, str]] = {}
 
-    def retry_after(self, identity: bytes) -> float:
-        """Return the loop time before which this device must not be forwarded."""
-        return max(self._backoff.get(key, (0.0, 0))[0] for key in (None, identity))
+    def backoff_reason(self, identity: bytes) -> str | None:
+        """Identify the active pause, including a failure on another connection."""
+        now = asyncio.get_running_loop().time()
+        for key in (None, identity):
+            if (pause := self._backoff.get(key)) and now < pause[0]:
+                return pause[2]
+        return None
 
-    def failed(self, key: bytes | None) -> None:
+    def failed(self, key: bytes | None, reason: str) -> None:
         """Double the pause for each consecutive failure, up to the ceiling."""
-        failures = self._backoff.pop(key, (0.0, 0))[1] + 1
+        now = asyncio.get_running_loop().time()
+        pause = self._backoff.get(key)
+        # Several connections can fail together during the same endpoint outage.
+        if pause and now < pause[0]:
+            return
+        failures = self._backoff.pop(key, (0.0, 0, ""))[1] + 1
         delay = min(RETRY_DELAY * 2 ** min(failures - 1, 16), MAX_RETRY_DELAY)
         if len(self._backoff) >= MAX_BACKOFF_KEYS:
-            del self._backoff[next(iter(self._backoff))]
-        self._backoff[key] = (asyncio.get_running_loop().time() + delay, failures)
+            del self._backoff[next(other for other in self._backoff if other is not None)]
+        self._backoff[key] = (now + delay, failures, reason)
+
+    def connected(self) -> None:
+        """Clear an expired endpoint pause after establishing a new socket."""
+        if (pause := self._backoff.get(None)) and pause[0] <= asyncio.get_running_loop().time():
+            self._backoff.pop(None)
 
     def succeeded(self, identity: bytes) -> None:
-        """Clear the pauses after SEMS answers."""
-        self._backoff.pop(None, None)
+        """Clear the device's reply backoff after SEMS answers."""
         self._backoff.pop(identity, None)
 
     async def _resolve(self) -> tuple[tuple[int, str], ...]:
@@ -171,14 +188,15 @@ class RelaySession:
         """Send once, copy validated replies and report whether SEMS answered."""
         self.events.clear()
         self._confirmed = False
-        if asyncio.get_running_loop().time() < self.endpoint.retry_after(request.identity):
-            raise RelayFailure("retry_backoff")
+        if blocked_by := self.endpoint.backoff_reason(request.identity):
+            raise RelayFailure("retry_backoff", blocked_by=blocked_by)
         reply_required = request.kind in REQUEST_KINDS
         reused = sent = False
         try:
             if self.writer is None or self.reader.at_eof() or self.writer.is_closing():
                 await self.close()
                 self.reader, self.writer = await self.endpoint.connect()
+                self.endpoint.connected()
             else:
                 reused = True
             timeout = REPLY_TIMEOUT if reply_required else FOLLOWUP_TIMEOUT
@@ -202,7 +220,9 @@ class RelaySession:
             return self._confirmed
         # The stream position is unknown after an interrupted exchange.
         await self.close()
-        if reason != "cloud_rejected":
+        if reason == "cloud_rejected":
+            self.endpoint.succeeded(request.identity)
+        else:
             if self._confirmed:
                 # An optional follow-up did not arrive.
                 self.endpoint.succeeded(request.identity)
@@ -210,10 +230,10 @@ class RelaySession:
             if sent and not reply_required and reason != "invalid_reply":
                 return False
             if reason in ENDPOINT_FAILURES:
-                self.endpoint.failed(None)
+                self.endpoint.failed(None, reason)
             # An idle upstream socket may simply have been closed: reconnect at once.
             elif not (reused and reason == "upstream_disconnected"):
-                self.endpoint.failed(request.identity)
+                self.endpoint.failed(request.identity, reason)
         raise RelayFailure(reason)
 
     async def _copy_replies(self, request: DeviceFrame, deadline: asyncio.Timeout) -> None:
@@ -234,11 +254,13 @@ class RelaySession:
             await self._deliver(frame)
             if result == "nack":
                 raise RelayFailure("cloud_rejected")
-            self._confirmed = True
             if request.kind != 0x03 or result == "time_sync":
+                self._confirmed = True
                 return
             # SEMS may follow a time sync acknowledgement with the clock itself.
-            deadline.reschedule(asyncio.get_running_loop().time() + FOLLOWUP_TIMEOUT)
+            if not self._confirmed:
+                deadline.reschedule(asyncio.get_running_loop().time() + FOLLOWUP_TIMEOUT)
+            self._confirmed = True
         if not self._confirmed:
             raise RelayFailure("invalid_reply")
 

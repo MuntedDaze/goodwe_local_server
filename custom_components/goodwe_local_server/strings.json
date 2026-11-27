@@ -106,7 +106,8 @@
           "reply_timeout": "Reply timed out",
           "upstream_disconnected": "Connection closed",
           "invalid_reply": "Invalid upstream reply",
-          "cloud_rejected": "Rejected by SEMS"
+          "cloud_rejected": "Rejected by SEMS",
+          "relay_error": "Internal forwarding error"
         }
       },
       "last_cloud_success": {

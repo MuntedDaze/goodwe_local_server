@@ -2,12 +2,15 @@
 
 ## Upgrade from manually installed v0.1
 
-1. Create a Home Assistant backup. Keep a separate copy of the existing
+1. Confirm Home Assistant Core is at least 2026.11.3. Create a Home Assistant
+   backup. Keep a separate copy of the existing
    `config/custom_components/goodwe_local_server` directory, including any
    edits to `sensor.py`.
-2. Read your existing relay setting, upstream endpoint and ports from that
-   copy. They were Python constants in v0.1 and must be entered manually in the
-   new options. Save these values privately.
+2. Record `GOODWE_RELAY`, `GOODWE_HOST`, `GOODWE_PORT` and `SERVER_PORT`
+   from the v0.1 `sensor.py`. Keep the existing device-side DNS override for
+   `tcp.goodwe-power.com`. Before stopping Home Assistant, confirm how its
+   resolver reaches the real SEMS host. Prepare the working upstream hostname
+   or, if Home Assistant also receives the override, a verified public SEMS IP.
 3. Stop Home Assistant and replace the component directory with the contents of
    the new `custom_components/goodwe_local_server` directory. The repository
    layout changed: if v0.1 was installed as a git checkout inside
@@ -16,11 +19,13 @@
    Assistant. Keep the existing GoodWe Local Server config entry and device
    and entity registries. The entry initially uses local-only defaults unless
    options already exist.
-4. Restore forwarding immediately if any redirected device needs SEMS, in
-   **Settings → Devices & services → GoodWe Local Server
-   → Configure** if it was enabled before the upgrade. Set the upstream port
-   and valid hostname or address using the [DNS instructions](../README.md#configuration).
-   Restore any custom listener port. Saving reloads the entry.
+4. For an existing SEMS-forwarding installation, go directly to
+   **Settings → Devices & services → GoodWe Local Server → Configure** after
+   restart. Turn **Forward to GoodWe SEMS** on. Enter the saved listener and
+   upstream ports and the prepared upstream hostname or public IP override.
+   Saving reloads the entry. Plan for a short forwarding interruption during
+   restart and before these options are saved. The relay uses TCP and requires
+   no SEMS API credentials.
 5. Allow the next valid packets to arrive. Check your previous entity IDs,
    custom names, automations and energy statistic sources before switching to
    any of the new HK1000 entities. Existing statistics remain linked to the
@@ -81,10 +86,13 @@ before relying on the new sensors or their statistics.
    `unsupported_packets`. A steadily rising `cloud_replies_dropped` means SEMS
    sends replies this relay does not recognize. Remove the override for that
    inverter if SEMS stops updating.
-8. Over at least 24 hours, record the observed reporting interval and the
-   `duplicate_telemetry`, `out_of_order_telemetry`, `relay_loop` and
-   `queue_full` counters. All should stay at or near zero. Raise the stale
-   threshold if healthy reporting gaps exceed it.
+8. Over at least 24 hours, record the observed reporting interval and check
+   `duplicate_telemetry`, `out_of_order_telemetry`, `telemetry_clock_jump`,
+   `invalid_telemetry_timestamp`, `invalid_lifetime_energy`, `relay_loop`
+   and `queue_full`. Correlate changes with restarts, clock synchronization,
+   buffered traffic or network outages. Verify that a true clock change
+   recovers after telemetry expires and three paced reports arrive. Raise
+   the stale threshold if healthy reporting gaps exceed it.
 9. Observe an integration reload and Home Assistant restart. Confirm recovery
    with the same IDs. Stop device reporting for longer than the stale threshold
    and confirm measurements become unavailable, then resume with fresh data.

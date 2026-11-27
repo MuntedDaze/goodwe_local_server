@@ -71,7 +71,7 @@ async def fake_sems(monkeypatch, on_connection):
 
 async def test_offline_fragmentation_multiple_frames_and_concurrent_devices():
     first = device_packet(payload=meter_payload(-150))
-    later = device_packet(payload=meter_payload(-400, 50))
+    later = device_packet(payload=meter_payload(-400, 50), sent=stamp(second=1))
     bad = first[:-1] + bytes([first[-1] ^ 1])
     async with listening() as (runtime, port):
         async with tcp_client(port) as (reader, writer), tcp_client(port) as (_, three_phase):
@@ -112,7 +112,7 @@ async def test_backfill_and_truncation_do_not_refresh_or_generate_readings():
             await until(lambda: not device.fresh)
             assert device.connection_health == "stale"
         async with tcp_client(port) as (_reader, writer):
-            writer.write(device_packet(payload=meter_payload(-402)))
+            writer.write(device_packet(payload=meter_payload(-402), sent=stamp(second=1)))
             await until(lambda: device.fresh)
         assert device.counters["connections"] == 2
         assert device.connection_health == "receiving"
@@ -205,7 +205,12 @@ async def test_local_telemetry_during_upstream_timeout_and_bounded_queue(monkeyp
         async with tcp_client(port) as (_reader, writer):
             writer.write(device_packet())
             await asyncio.wait_for(upstream_received.wait(), 1)
-            writer.write(b"".join(device_packet(payload=meter_payload(-w)) for w in range(9)))
+            writer.write(
+                b"".join(
+                    device_packet(payload=meter_payload(-w), sent=stamp(second=w + 1))
+                    for w in range(9)
+                )
+            )
             await until(lambda: runtime.counters["telemetry"] == 10)
             device = runtime.devices["TEST0001"]
             assert device.cloud_health == "waiting"
@@ -234,7 +239,7 @@ async def test_connection_retries_on_new_telemetry_after_upstream_disconnect(mon
     ):
         async with tcp_client(port) as (reader, writer):
             first = device_packet()
-            later = device_packet(payload=meter_payload(-777))
+            later = device_packet(payload=meter_payload(-777), sent=stamp(second=1))
             writer.write(first)
             device = await until(lambda: runtime.devices.get("TEST0001"))
             await until(lambda: device.cloud_health == "upstream_disconnected")

@@ -230,13 +230,18 @@ async def test_backoff_grows_is_capped_and_resets_after_success(monkeypatch):
     monkeypatch.setattr(asyncio.get_running_loop(), "time", lambda: clock[0])
     delays = []
     for _ in range(5):
-        endpoint.failed(None)
-        delays.append(endpoint.retry_after(b"device") - clock[0])
+        endpoint.failed(None, "connect_failed")
+        endpoint.failed(None, "connect_failed")  # A concurrent failure cannot extend the pause.
+        deadline = endpoint._backoff[None][0]
+        delays.append(deadline - clock[0])
+        endpoint.succeeded(b"other")  # A reply on an already-open socket cannot clear it.
+        assert endpoint.backoff_reason(b"device") == "connect_failed"
+        clock[0] = deadline
     assert delays == [10, 20, 40, 60, 60]
-    endpoint.succeeded(b"device")
-    assert endpoint.retry_after(b"device") <= clock[0]
-    endpoint.failed(None)
-    assert endpoint.retry_after(b"device") - clock[0] == 10
+    endpoint.connected()
+    endpoint.failed(None, "dns_failure")
+    assert endpoint.backoff_reason(b"device") == "dns_failure"
+    assert endpoint._backoff[None][0] - clock[0] == 10
 
 
 async def test_recovery_after_backoff_expires(monkeypatch):
@@ -259,6 +264,62 @@ async def test_recovery_after_backoff_expires(monkeypatch):
             later = device_packet(sent=stamp(second=2))
             assert await send_and_close(port, later) == ack_for(later)
             assert runtime.devices["TEST0001"].cloud_health == "healthy"
+
+
+async def test_endpoint_backoff_reports_outage_and_recovery_for_other_devices(monkeypatch):
+    received = []
+    async with fake_sems(monkeypatch, acknowledging(received)):
+        working = RelayEndpoint.connect
+        offline = False
+
+        async def connect(endpoint):
+            if offline:
+                raise RelayFailure("dns_failure")
+            return await working(endpoint)
+
+        monkeypatch.setattr(RelayEndpoint, "connect", connect)
+        async with listening(FORWARD) as (runtime, port):
+            await send_and_close(port, device_packet(serial=b"OTHERMTR"))
+            device = runtime.devices["OTHERMTR"]
+            assert device.cloud_health == "healthy"
+            initial_success = device.last_cloud_success
+            offline = True
+            await send_and_close(port, device_packet())
+            await send_and_close(port, device_packet(serial=b"OTHERMTR", sent=stamp(second=1)))
+            assert device.cloud_health == "dns_failure"
+            assert device.last_cloud_success == initial_success
+            assert device.counters["retry_backoff"] == 1
+            assert device.counters["telemetry"] == 2
+            offline = False
+            monkeypatch.setattr(runtime.endpoint, "backoff_reason", lambda _identity: None)
+            await send_and_close(port, device_packet(serial=b"OTHERMTR", sent=stamp(second=2)))
+            assert device.cloud_health == "healthy"
+            assert device.counters["cloud_success"] == 2
+
+
+async def test_local_device_limit_does_not_drop_intact_relay_frames(monkeypatch):
+    monkeypatch.setattr(server, "MAX_DEVICES", 1)
+    received = []
+    frames = [
+        device_packet(),
+        device_packet(serial=b"OTHERMTR"),
+        device_packet(b"93000HKU"),
+        device_packet(serial=b"OTHERMTR", sent=stamp(second=1)),
+    ]
+    async with (
+        fake_sems(monkeypatch, acknowledging(received)),
+        listening(FORWARD) as (
+            runtime,
+            port,
+        ),
+    ):
+        await send_and_close(port, *frames[:2])
+        await send_and_close(port, *frames[2:])
+        assert received == frames
+        assert set(runtime.devices) == {"TEST0001"}
+        assert runtime.counters["identity_changes"] == 1
+        assert runtime.counters["conflicting_devices"] == 1
+        assert runtime.counters["devices_rejected"] == 1
 
 
 async def test_one_unanswered_device_does_not_block_another(monkeypatch):
@@ -364,6 +425,9 @@ async def test_unexpected_relay_error_is_recorded_and_forwarding_continues(monke
     ):
         assert await send_and_close(port, *frames) == ack_for(frames[1])
         assert runtime.counters["internal_errors"] == 1
+        device = runtime.devices["TEST0001"]
+        assert device.counters["relay_error"] == 1
+        assert device.cloud_health == "healthy"
 
 
 async def test_slow_address_gets_a_usable_share_of_the_connect_budget(monkeypatch):
@@ -466,12 +530,14 @@ async def test_buffered_frames_yield_to_the_event_loop():
 
 async def test_repeated_frame_does_not_refresh_availability():
     frame = device_packet(sent=stamp(10, 0, 0))
+    reencrypted = device_packet(sent=stamp(10, 0, 0), iv=b"x" * 16)
+    assert frame != reencrypted
     async with listening(Settings(stale_after=0.2)) as (runtime, port):
         await send_and_close(port, frame)
         device = runtime.devices["TEST0001"]
         first = device.received_at
         await asyncio.sleep(0.05)
-        await send_and_close(port, frame)
+        await send_and_close(port, reencrypted)
         assert device.received_at == first
         assert device.counters["duplicate_telemetry"] == 1
         await until(lambda: not device.fresh)
@@ -493,18 +559,126 @@ async def test_older_measurement_does_not_replace_a_newer_one():
         assert device.counters["telemetry"] == 1
 
 
-async def test_device_clock_stepping_back_recovers_on_the_next_report(monkeypatch):
-    monkeypatch.setattr(server, "CLOCK_RESYNC_GAP", 0.05, raising=False)
+@pytest.fixture
+async def advance_receipt_clock(monkeypatch):
+    loop = asyncio.get_running_loop()
+    monotonic = loop.time
+    offset = 0
+
+    def advance(seconds):
+        nonlocal offset
+        offset += seconds
+
+    monkeypatch.setattr(loop, "time", lambda: monotonic() + offset)
+    return advance
+
+
+async def test_delayed_live_reports_cannot_rebase_a_fresh_clock(advance_receipt_clock):
     async with listening() as (runtime, port):
         await send_and_close(port, device_packet(sent=stamp(10)))
-        await send_and_close(port, device_packet(payload=meter_payload(-1), sent=stamp(9)))
         device = runtime.devices["TEST0001"]
+        for second in (0, 30):
+            advance_receipt_clock(30)
+            await send_and_close(
+                port, device_packet(payload=meter_payload(-1), sent=stamp(9, 0, second))
+            )
         assert device.payload == meter_payload()
-        await asyncio.sleep(0.08)
-        await send_and_close(port, device_packet(payload=meter_payload(-2), sent=stamp(9, 1)))
+        assert device.counters["out_of_order_telemetry"] == 2
+
+
+@pytest.mark.parametrize("corrected_hour", [9, 11, 0])
+async def test_clock_change_recovers_after_stale_with_paced_reports(
+    advance_receipt_clock, corrected_hour
+):
+    async with listening() as (runtime, port):
+        await send_and_close(port, device_packet(sent=stamp(10)))
+        device = runtime.devices["TEST0001"]
+        advance_receipt_clock(151)
+        await until(lambda: not device.fresh)
+        # Catch-up reports received in a burst don't prove that the clock moved.
+        await send_and_close(
+            port,
+            *(device_packet(sent=stamp(corrected_hour, minute)) for minute in range(3)),
+        )
+        assert not device.fresh
+        # A lower lifetime count indicates old measurements even if they arrive on cadence.
+        for minute in range(3, 6):
+            advance_receipt_clock(60)
+            await send_and_close(
+                port,
+                device_packet(
+                    sent=stamp(corrected_hour, minute), payload=meter_payload(import_energy=1)
+                ),
+            )
+        assert not device.fresh
+        for minute in range(6, 9):
+            advance_receipt_clock(60)
+            await send_and_close(
+                port, device_packet(sent=stamp(corrected_hour, minute), payload=meter_payload(-2))
+            )
         assert device.payload == meter_payload(-2)
-        await send_and_close(port, device_packet(payload=meter_payload(-3), sent=stamp(9, 2)))
-        assert device.payload == meter_payload(-3)
+        assert device.fresh
+        assert device.counters["telemetry_clock_rebased"] == 1
+        # Once rebased, an isolated report from the old clock cannot restore that timeline.
+        await send_and_close(port, device_packet(sent=stamp(10, 10)))
+        assert device.payload == meter_payload(-2)
+
+
+async def test_invalid_far_future_and_isolated_clock_jump_do_not_poison_ordering():
+    async with listening() as (runtime, port):
+        invalid = device_packet(sent=bytes(6))
+        future = device_packet(sent=bytes([99, 1, 1, 0, 0, 0]))
+        await send_and_close(port, invalid, future)
+        device = runtime.devices["TEST0001"]
+        assert device.payload is None
+        assert device.counters["invalid_telemetry_timestamp"] == 1
+        assert device.counters["future_telemetry_timestamp"] == 1
+        await send_and_close(
+            port,
+            device_packet(sent=stamp(10)),
+            device_packet(sent=stamp(11)),
+            device_packet(sent=stamp(10, 0, 30), payload=meter_payload(-400)),
+        )
+        assert device.payload == meter_payload(-400)
+        assert device.counters["telemetry_clock_jump"] == 1
+        assert device.counters["telemetry"] == 2
+
+
+async def test_initial_clock_ahead_recovers_without_assuming_a_device_timezone(
+    advance_receipt_clock,
+):
+    async with listening() as (runtime, port):
+        await send_and_close(port, device_packet(sent=stamp(16)))
+        device = runtime.devices["TEST0001"]
+        advance_receipt_clock(151)
+        await until(lambda: not device.fresh)
+        for second in (0, 30):
+            await send_and_close(port, device_packet(sent=stamp(10, 0, second)))
+            advance_receipt_clock(30)
+            assert not device.fresh
+        await send_and_close(port, device_packet(sent=stamp(10, 1), payload=meter_payload(-2)))
+        assert device.fresh
+        assert device.payload == meter_payload(-2)
+
+
+async def test_outage_with_unchanged_clock_accepts_current_sample_after_backfill(
+    advance_receipt_clock,
+):
+    async with listening() as (runtime, port):
+        await send_and_close(port, device_packet(sent=stamp(10)))
+        device = runtime.devices["TEST0001"]
+        advance_receipt_clock(600)
+        await until(lambda: not device.fresh)
+        await send_and_close(
+            port,
+            device_packet(sent=stamp(10, 1)),
+            device_packet(kind=0x45, sent=stamp(10, 10)),
+        )
+        assert not device.fresh
+        await send_and_close(port, device_packet(sent=stamp(10, 10), payload=meter_payload(-400)))
+        assert device.fresh
+        assert device.payload == meter_payload(-400)
+        assert device.counters["telemetry"] == 2
 
 
 def _read(descriptions, payload, settings=Settings()):
@@ -548,6 +722,24 @@ async def test_shutdown_interrupts_forwarding_that_outlived_its_connection(monke
             await asyncio.wait_for(runtime.stop(), 1)
             assert await asyncio.wait_for(reader.read(), 1) == b""
         assert not runtime._clients
+        assert not runtime.endpoint.in_flight
+
+
+async def test_drain_deadline_releases_a_stalled_upstream(monkeypatch):
+    monkeypatch.setattr(server, "RELAY_DRAIN_TIMEOUT", 0.12)
+    upstream_closed = asyncio.Event()
+
+    async def stall(reader, _writer):
+        assert await read_frame(reader, DEVICE_PREFIX) is not None
+        assert await reader.read() == b""
+        upstream_closed.set()
+
+    async with fake_sems(monkeypatch, stall), listening(FORWARD) as (runtime, port):
+        await send_and_close(port, device_packet(), device_packet(sent=stamp(second=1)))
+        await asyncio.wait_for(upstream_closed.wait(), 1)
+        device = runtime.devices["TEST0001"]
+        assert device.counters["relay_drain_timeout"] == 1
+        assert device.counters["telemetry"] == 2
         assert not runtime.endpoint.in_flight
 
 

@@ -5,17 +5,19 @@ import logging
 from collections import Counter, deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from hashlib import sha256
 
 from .const import Settings
 from .protocol import (
     DEVICE_PREFIX,
+    INVERTER_MODEL,
     DeviceFrame,
     ProtocolError,
     decode_telemetry,
     parse_device,
     read_frame,
+    signed,
 )
 from .relay import RelayEndpoint, RelayFailure, RelaySession, close_writer
 
@@ -28,8 +30,12 @@ FRAME_TIMEOUT = 120
 RELAY_QUEUE_SIZE = 128
 RELAY_DRAIN_TIMEOUT = 60
 REPLAY_HISTORY = 64
-# Minimum spacing which shows a device clock moved back, as opposed to old frames.
-CLOCK_RESYNC_GAP = 5
+CLOCK_JUMP_TOLERANCE = 120
+CLOCK_MIN_SPACING = 5
+# A sanity ceiling only. Device calendar fields carry no UTC offset.
+MAX_CLOCK_LEAD = timedelta(days=1)
+HK1000_LIFETIME_OFFSETS = (0x07, 0x0D, 0x1F)
+METER_LIFETIME_OFFSETS = (*HK1000_LIFETIME_OFFSETS, 0x13, 0x19, 0x25, 0x2B, 0x31)
 
 
 @dataclass(slots=True)
@@ -51,26 +57,60 @@ class DeviceState:
     diagnostic_listeners: set[Callable[[], None]] = field(default_factory=set)
     expiry: asyncio.TimerHandle | None = None
     recent: deque[bytes] = field(default_factory=lambda: deque(maxlen=REPLAY_HISTORY))
-    sent_at: bytes = b""
-    clock_candidate: tuple[bytes, float] | None = None
+    sent_at: datetime | None = None
+    clock_candidate: tuple[datetime, float, int] | None = None
+    energy_high_water: dict[int, int] = field(default_factory=dict)
+    regressed_energy: set[int] = field(default_factory=set)
 
-    def screen(self, packet: DeviceFrame) -> str | None:
+    def screen(self, packet: DeviceFrame, stale_after: int) -> str | None:
         """Return why a reading must not replace or refresh current telemetry."""
-        digest = sha256(packet.raw).digest()
+        try:
+            sent_at = datetime(2000 + packet.sent_at[0], *packet.sent_at[1:])
+        except ValueError:
+            return "invalid_telemetry_timestamp"
+        if sent_at > datetime.now(UTC).replace(tzinfo=None) + MAX_CLOCK_LEAD:
+            return "future_telemetry_timestamp"
+        # The IV and other envelope bytes can change when the same report is resent.
+        digest = sha256(packet.sent_at + packet.telemetry).digest()
         if digest in self.recent:
             return "duplicate_telemetry"
-        self.recent.append(digest)
-        if packet.sent_at < self.sent_at:
+        if self.sent_at is not None:
             now = asyncio.get_running_loop().time()
-            earlier = self.clock_candidate
-            # Two advancing, spaced reports mean the device clock was moved back.
-            if not (
-                earlier and earlier[0] < packet.sent_at and now - earlier[1] >= CLOCK_RESYNC_GAP
-            ):
-                self.clock_candidate = (packet.sent_at, now)
-                return "out_of_order_telemetry"
-        self.sent_at, self.clock_candidate = packet.sent_at, None
+            elapsed = now - self.received_at
+            advance = (sent_at - self.sent_at).total_seconds()
+            if advance <= 0 or abs(advance - elapsed) > CLOCK_JUMP_TOLERANCE:
+                if not self._rebase_clock(sent_at, now, stale_after, packet.telemetry):
+                    return "out_of_order_telemetry" if advance <= 0 else "telemetry_clock_jump"
+        self.recent.append(digest)
+        self.sent_at, self.clock_candidate = sent_at, None
         return None
+
+    def _rebase_clock(
+        self, sent_at: datetime, now: float, stale_after: int, payload: bytes
+    ) -> bool:
+        """Look for a new clock baseline once the old stream has gone stale."""
+        offsets = (0x6F,) if self.model == INVERTER_MODEL else METER_LIFETIME_OFFSETS
+        if self.fresh or any(
+            signed(payload, offset, 4) < signed(self.payload, offset, 4) for offset in offsets
+        ):
+            self.clock_candidate = None
+            return False
+        count = 1
+        if self.clock_candidate:
+            previous_stamp, previous_receipt, previous_count = self.clock_candidate
+            elapsed = now - previous_receipt
+            advance = (sent_at - previous_stamp).total_seconds()
+            if (
+                CLOCK_MIN_SPACING <= elapsed < stale_after
+                and advance > 0
+                and abs(advance - elapsed) <= max(2, elapsed / 4)
+            ):
+                count = previous_count + 1
+        self.clock_candidate = (sent_at, now, count)
+        if count < 3:
+            return False
+        self.counters["telemetry_clock_rebased"] += 1
+        return True
 
     @property
     def data_age(self) -> int | None:
@@ -99,20 +139,30 @@ class DeviceState:
         self.last_telemetry = datetime.now(UTC)
         self.fresh = True
         self.counters["telemetry"] += 1
+        if self.model == "91000HKU":
+            self.regressed_energy.clear()
+            for offset in HK1000_LIFETIME_OFFSETS:
+                value = signed(payload, offset, 4)
+                if value < self.energy_high_water.get(offset, 0):
+                    self.regressed_energy.add(offset)
+                else:
+                    self.energy_high_water[offset] = value
+            if self.regressed_energy:
+                self.counters["invalid_lifetime_energy"] += 1
         if self.expiry:
             self.expiry.cancel()
         self.expiry = loop.call_at(now + stale_after, self._expire)
         self._publish_telemetry()
 
-    def cloud_result(self, result: str) -> None:
+    def cloud_result(self, result: str, *, blocked_by: str | None = None) -> None:
         """Record the outcome of a forwarding exchange."""
         if result == "healthy":
             self.last_cloud_success = datetime.now(UTC)
             self.counters["cloud_success"] += 1
         else:
             self.counters[result] += 1
-        if result not in ("retry_backoff", "queue_full"):
-            self.cloud_health = result
+        if result != "queue_full":
+            self.cloud_health = blocked_by or result
         self.publish_diagnostics()
 
     def _expire(self) -> None:
@@ -298,21 +348,22 @@ class GoodWeServer:
                     packet = decode_telemetry(message)
                 except ProtocolError:
                     # The checksum passed, so the identity can attribute the error.
-                    self._record("invalid_packets", device or self._known_device(message.identity))
+                    self._record("invalid_packets", self._known_device(message.identity))
                 else:
                     if packet is None:
-                        self._record(
-                            "unsupported_packets", device or self._known_device(message.identity)
-                        )
+                        self._record("unsupported_packets", self._known_device(message.identity))
                 if packet is not None:
                     if device and (packet.serial, packet.model) != (device.serial, device.model):
                         self._record("identity_changes", device)
-                        break
-                    if device is None:
-                        device = self._device_for(packet, connected_at)
-                        if device is None:
+                        if not self.endpoint:
                             break
-                    self._accept_packet(packet, device)
+                    else:
+                        if device is None:
+                            device = self._device_for(packet, connected_at)
+                        if device is not None:
+                            self._accept_packet(packet, device)
+                        elif not self.endpoint:
+                            break
                 # Forward every intact frame, including those not decoded locally.
                 if self.endpoint:
                     target = self._known_device(message.identity)
@@ -352,7 +403,7 @@ class GoodWeServer:
         self.counters["valid_packets"] += 1
         device.counters["valid_packets"] += 1
         if packet.telemetry is not None:
-            if reason := device.screen(packet):
+            if reason := device.screen(packet, self.settings.stale_after):
                 self._record(reason, device)
             else:
                 self.counters["telemetry"] += 1
@@ -372,6 +423,10 @@ class GoodWeServer:
                     await self._forward(session, packet, device)
                 except Exception as err:  # One bad exchange must not stop forwarding.
                     self._internal_error(err)
+                    self.counters["relay_error"] += 1
+                    if device:
+                        device.cloud_result("relay_error")
+                    self._log_forwarding(packet.identity, "relay_error")
                     await session.close()
                 finally:
                     queue.task_done()
@@ -391,8 +446,8 @@ class GoodWeServer:
             reason = str(err)
             self.counters[reason] += 1
             if device:
-                device.cloud_result(reason)
-            self._log_forwarding(packet.identity, reason)
+                device.cloud_result(reason, blocked_by=err.blocked_by)
+            self._log_forwarding(packet.identity, err.blocked_by or reason)
         else:
             if confirmed:
                 self.counters["cloud_success"] += 1

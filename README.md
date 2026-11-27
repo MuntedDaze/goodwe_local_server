@@ -1,8 +1,8 @@
 # GoodWe Local Server for Home Assistant
 
 Receive GoodWe telemetry over your LAN. GoodWe devices push their existing SEMS
-messages to Home Assistant. You can optionally forward documented exchanges to
-GoodWe so SEMS monitoring can continue alongside local telemetry.
+messages to Home Assistant. You can optionally relay those messages to GoodWe
+so SEMS monitoring can continue alongside local telemetry.
 
 | Hardware | Local telemetry |
 | --- | --- |
@@ -21,11 +21,12 @@ inverter. This integration does not publish local DNS G3 inverter entities.
 
 ## Install
 
-Requires Home Assistant Core 2026.11.3 or later.
+Version 0.2.0 requires Home Assistant Core 2026.11.3 or later.
 
 1. In HACS, add [MuntedDaze/goodwe_local_server](https://github.com/MuntedDaze/goodwe_local_server)
-   as a custom repository of type **Integration**, then download it. For a manual
-   installation, copy `custom_components/goodwe_local_server` from the release
+   as a custom repository of type **Integration** after v0.2.0 is available on
+   `main`, then download it. For a manual installation, copy
+   `custom_components/goodwe_local_server` from the version you are installing
    into Home Assistant's `config/custom_components/`.
 2. Restart Home Assistant. In **Settings → Devices & services → Add integration**,
    select **GoodWe Local Server**.
@@ -59,32 +60,47 @@ output during commissioning. Channel 3 is unused on the HK1000.
 
 The default offset is 0 W. Set an offset after measuring a repeatable nighttime
 bias. The raw CT2 reading remains visible, and the offset affects the new solar
-generation and household consumption readings. A CT2 reading from -100 to 0 W is
-treated as inverter standby draw or noise and contributes zero generation, so
-household consumption includes that draw. Below -100 W, **Solar generation
-power** and **Household consumption power** are unavailable: the clamp is likely
-reversed or on a different circuit, and the raw value stays visible on **L2
-Export Power**. At least one published HK1000 installation reports CT2 this way.
+generation and household consumption readings. CT2 between -100 and 0 W
+contributes zero generation. This fixed allowance covers possible standby draw
+or noise, which is already included in grid import. It can also mask a small
+wiring or sign error in the derived values. Below -100 W, **Solar generation
+power** and **Household consumption power** become unavailable. Compare **L2
+Export Power**, which always exposes raw CT2 while telemetry is fresh, with the
+inverter. One published HK1000 installation reported -3898 W on CT2.
 The integration cannot detect a reversed grid clamp, so verify the direction of
 **Signed grid power** during commissioning.
 
 Existing total and phase entities keep their IDs and calculations. The
 HK1000's combined totals include fields across both CTs. Use the dedicated
 lifetime counters for grid and solar energy statistics once commissioning is
-complete. Invalid or stale readings become unavailable.
+complete. The dedicated counters become unavailable when their values fall
+below their highest valid readings since integration setup. Other values keep
+updating, and the `invalid_lifetime_energy` counter records the sample. If a
+physical meter reset or rollover is confirmed, check the recorder statistics
+and reload the integration to establish a new baseline. Legacy registers
+retain their original behavior.
 
-A report refreshes readings only if it is new. A byte-identical repeat is
-ignored. A report with an older device timestamp is ignored too, unless a
-second, later report at least five seconds afterwards shows that the device
-clock was moved back. Cached or backfill reports never update local readings.
+Local freshness uses monotonic receipt time. The device's calendar field has
+no known time zone. Invalid dates and dates more than one day ahead of UTC are
+rejected as implausible. A report at the same device time with the same decoded
+data is a repeat even if its encryption envelope differs. Explicit backfill
+never refreshes readings.
+
+Older timestamps and advances that differ from elapsed receipt time by over
+two minutes are held back. After telemetry goes stale, a clock change can
+recover on three advancing reports spaced at least five seconds apart,
+progressing at approximately the receipt cadence, with nondecreasing lifetime
+counters relative to the last accepted report. This also works without SEMS.
+This is a heuristic for unmarked reports. A paced replay with unchanged energy
+can resemble live traffic, and replay history is reset on integration reload.
 
 ## Configuration
 
 | Option | Default | Behavior |
 | --- | --- | --- |
 | Local TCP port | 20001 | IPv4 LAN listener. Leave at 20001 for devices that use the factory endpoint. |
-| Telemetry timeout | 150 seconds | Configurable from 15 to 3600 seconds. The default tolerates one missed report at a 60 second cadence. |
-| Forward to GoodWe SEMS | Off | Enables a bounded relay for supported traffic. |
+| Telemetry timeout | 150 seconds | Configurable from 15 to 3600 seconds. Allows a missed 60-second report and 30 seconds of margin. A 30-second HK1000 can go up to five reporting intervals before measurements expire. Saved timeout options are retained. |
+| Forward to GoodWe SEMS | Off | Enables the bounded TCP relay. |
 | Upstream hostname and TCP port | `tcp.goodwe-power.com`, 20001 | Set the endpoint offered to Home Assistant by DNS. |
 | Upstream IP override | Blank | Optional public IPv4 or IPv6 address, taking precedence over the hostname. |
 | HK1000 solar offset | 0 W | Optional 0–50 W threshold for small positive CT2 readings. |
@@ -110,9 +126,9 @@ An in-flight frame guard also detects traffic routed back to the listener.
 ### Traffic and acknowledgements
 
 With forwarding enabled, every device message with intact framing and checksum
-is sent to SEMS unchanged. This covers models, message types and payloads that
-the integration does not decode locally, because those devices rely on the
-relay once DNS points them at Home Assistant. Corrupt frames are dropped.
+is eligible for forwarding to SEMS unchanged. This includes unknown models,
+unknown message types and payloads rejected for local use. Corrupt frames are
+dropped.
 
 Traffic from SEMS is restricted. Only acknowledgements, rejections and clock
 messages that match the identity of the message just sent are returned to the
@@ -121,11 +137,13 @@ other undocumented replies are discarded and counted as
 `cloud_replies_dropped`. Cloud functions that depend on them do not work through
 this relay.
 
-After a failure the relay pauses for 10 seconds, doubling to at most 60 seconds
+After a retryable failure the relay pauses for 10 seconds, doubling to at most 60 seconds
 while failures continue. The pause persists across new device connections. DNS
 and connection failures pause all devices; a reply failure pauses only the
-affected device. Messages received during a pause are **not stored or resent**,
-so SEMS can have gaps after an outage unless the device itself resends them.
+affected device. Diagnostics keep the underlying reason when a report is
+skipped during a pause. SEMS gaps can occur after a failure or backoff unless
+the device resends the data. Upstream work is bounded by a queue of 128 waiting
+frames per connection and a 60-second drain window after a connection ends.
 
 Without forwarding, Home Assistant only consumes local telemetry. The
 protocol research contains genuine cloud acknowledgements, but the requirements
@@ -141,6 +159,7 @@ connections and cloud reply processing.
 | Listener cannot start | Check the configured port and whether another integration or container already binds it. |
 | No device appears | Verify device-side DNS, TCP port reachability, VLAN/firewall rules and that Home Assistant receives a known GoodWe frame. |
 | Stale or unavailable telemetry | Check last valid telemetry and last connection. Backfill, invalid, repeated and out-of-order frames do not make data fresh; check the packet counters. Ensure the timeout exceeds the observed interval. |
+| No recovery after a device clock reset | Check `invalid_telemetry_timestamp`, `future_telemetry_timestamp` and `telemetry_clock_jump`. Confirm the meter clock and verify its latest readings before reloading the integration. |
 | Solar and household power unavailable while grid power updates | CT2 reads below -100 W (check clamp direction and placement), or the inputs imply negative household consumption. |
 | Upstream address blocked | Home Assistant is resolving only local or nonpublic destinations. Fix split DNS or use an explicit real address. |
 | Cloud forwarding fails while local values update | Check upstream DNS, route, port and SEMS. The cloud health entity shows the outcome of the most recent exchange, and the Home Assistant log records when forwarding fails and recovers. |
@@ -159,9 +178,8 @@ lifecycle design and future source-selection interface, and the
 [independent v0.2 audit](docs/independent-audit.md) for the second review's
 findings and remaining uncertainties.
 
-On Windows the tests also run natively with Python 3.14: create the virtual
-environment, install `requirements-dev.txt` and run the same commands. One test
-fixture creates a symbolic link, which needs Developer Mode.
+On Windows the tests also run natively with Python 3.14.2 or later. Create the
+virtual environment, install `requirements-dev.txt` and run the same commands.
 
 On Linux, or as the setup script of a Codex cloud environment, run
 `bash scripts/setup.sh`. It creates `.venv` with Python 3.14.2 or later and

@@ -5,6 +5,7 @@ import json
 from contextlib import asynccontextmanager
 from dataclasses import replace
 from pathlib import Path
+from shutil import copytree, ignore_patterns
 
 import probatio
 import pytest
@@ -32,7 +33,7 @@ LEGACY_ENTITY_ID = "sensor.house_meter_existing_export_power"
 @asynccontextmanager
 async def home_assistant(path):
     if not (components := path / "custom_components").exists():
-        components.symlink_to(REPO / "custom_components", target_is_directory=True)
+        copytree(REPO / "custom_components", components, ignore=ignore_patterns("__pycache__"))
     hass = HomeAssistant(str(path))
     hass.config.skip_pip = True
     loader.async_setup(hass)
@@ -158,7 +159,7 @@ async def test_home_assistant_entities_recover_after_stale_and_unload(tmp_path):
             await until(lambda: _state(hass, entity_id) == "unavailable")
             assert _state(hass, _id(hass, "connection_health")) == "stale"
             assert _state(hass, _id(hass, "data_age")) is not None
-            writer.write(device_packet(payload=meter_payload(300, 1200)))
+            writer.write(device_packet(payload=meter_payload(300, 1200), sent=stamp(second=1)))
             await until(lambda: _state(hass, entity_id) == "0")
             assert _state(hass, _id(hass, "grid_export_power")) == "300"
             assert _state(hass, _id(hass, "household_consumption_power")) == "900"
@@ -168,6 +169,30 @@ async def test_home_assistant_entities_recover_after_stale_and_unload(tmp_path):
         assert runtime.devices[METER_SERIAL].expiry is None
         assert not runtime.devices[METER_SERIAL].telemetry_listeners
         assert not runtime.devices[METER_SERIAL].diagnostic_listeners
+
+
+async def test_hk1000_lifetime_counter_regression_does_not_become_a_recorder_reset(tmp_path):
+    async with home_assistant(tmp_path) as hass:
+        entry = await _setup_entry(hass)
+        runtime = entry.runtime_data
+        async with tcp_client(_port(runtime)) as (_, writer):
+            writer.write(device_packet(payload=meter_payload(-400)))
+            key = "lifetime_grid_import_energy"
+            await until(lambda: _state(hass, _id(hass, key)) == "320.0")
+            assert hass.states.get(_id(hass, key)).attributes["state_class"] == "total_increasing"
+            writer.write(
+                device_packet(payload=meter_payload(-500, import_energy=0), sent=stamp(second=1))
+            )
+            await until(lambda: _state(hass, _id(hass, key)) == "unavailable")
+            assert _state(hass, _id(hass, "grid_import_power")) == "500"
+            assert _state(hass, _id(hass, "l1_energy_imported")) == "0.0"
+            writer.write(
+                device_packet(
+                    payload=meter_payload(-500, import_energy=32001), sent=stamp(second=2)
+                )
+            )
+            await until(lambda: _state(hass, _id(hass, key)) == "320.01")
+            assert runtime.devices[METER_SERIAL].counters["invalid_lifetime_energy"] == 1
 
 
 async def test_legacy_entry_settings_identity_and_restart(tmp_path):

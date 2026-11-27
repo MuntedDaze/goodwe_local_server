@@ -23,7 +23,7 @@ from .protocol import METER_MODELS, RELAY_ONLY_MODEL, signed
 from .server import DeviceState
 
 SCAN_INTERVAL = timedelta(seconds=10)
-# CT2 draw up to this size is inverter standby or noise. Beyond it, generation is unknown.
+# Allow small negative CT2 readings as possible standby draw or noise.
 SOLAR_STANDBY_LIMIT_W = 100
 
 
@@ -32,6 +32,7 @@ class Reading(SensorEntityDescription):
     """Describe a telemetry value and its existing or new entity key."""
 
     read: Callable[[bytes, Settings], int | float | str | None]
+    lifetime_offset: int | None = None
 
 
 def _register(
@@ -223,6 +224,7 @@ def _hk1000_energy(key: str, offset: int) -> Reading:
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement="kWh",
         read=partial(_lifetime, offset),
+        lifetime_offset=offset,
     )
 
 
@@ -288,6 +290,7 @@ DIAGNOSTICS = (
             "upstream_disconnected",
             "invalid_reply",
             "cloud_rejected",
+            "relay_error",
         ],
     ),
     _diagnostic("last_cloud_success", device_class=SensorDeviceClass.TIMESTAMP),
@@ -368,7 +371,11 @@ class TelemetrySensor(DeviceSensor):
 
     @property
     def native_value(self) -> int | float | str | None:
-        if self.device.fresh and self.device.payload is not None:
+        if (
+            self.device.fresh
+            and self.device.payload is not None
+            and self.entity_description.lifetime_offset not in self.device.regressed_energy
+        ):
             return self.entity_description.read(self.device.payload, self.settings)
         return None
 

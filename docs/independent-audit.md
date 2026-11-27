@@ -1,5 +1,13 @@
 # Independent audit of v0.2
 
+The final release review rechecked the audited implementation at `a3e748c`.
+The timestamp and forwarding findings below describe that snapshot. The final
+review found that a two-report backward-clock heuristic admitted paced old
+reports, raw-envelope hashes missed re-encrypted duplicates, and devices
+skipped by a shared SEMS backoff could still display a healthy forwarding
+state. The current behavior is documented in the [README](../README.md) and
+the [commissioning guide](commissioning.md).
+
 Reviewed commit `13cf7e78ddb6a06211d245dd32a089f527f47f91` against fork baseline
 `42880e2`, the published GoodWe protocol captures and parsers at
 [smlx/goodwe `4787358`](https://github.com/smlx/goodwe/tree/4787358ab16d3b1d78d8b5aeede6bcc5b21e3e70/mitm),
